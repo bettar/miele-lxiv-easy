@@ -56,7 +56,7 @@ config PATCH_OPENJPG
 
 config DOWNLOAD_SOURCES_JASPER
     bool "Jasper"
-    default n
+    default y
 
 config DOWNLOAD_SOURCES_GLEW
     bool "GLEW"

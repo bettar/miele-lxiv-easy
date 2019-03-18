@@ -63,7 +63,7 @@ Additionally, you must define the three top-level directories involved in the pr
 
 	![step2](img/step2.png)
 
-	Run the bash  script that carries out the downloads:
+	Run the shell script that carries out the downloads:
 
 		$ ./build.sh
 
@@ -81,7 +81,7 @@ Additionally, you must define the three top-level directories involved in the pr
 
 	![step3](img/step3.png)
 
-	Run the bash script. This might take a long time. To capture possible errors and warning, save the output to a log file:
+	Run the shell script. This might take a long time. To capture possible errors and warning, save the output to a log file:
 
 		$ script log-$(date +%Y%m%d_%H%M).txt
 		$ ./build.sh
@@ -100,7 +100,7 @@ Additionally, you must define the three top-level directories involved in the pr
 
 	![step4](img/step4.png)
 
-	Run the bash script.
+	Run the shell script.
 
 		$ ./build.sh
 
