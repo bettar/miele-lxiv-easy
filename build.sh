@@ -520,6 +520,10 @@ echo "current dir: $SRC_OPENJPG"
 patch -p1 -i $EASY_HOME/patch/${OPENJPG}_${APP}.patch
 fi
 
+if [ $STEP_INFO_OPENJPG ] ; then   
+cd $SRC_OPENJPG
+echo === OPENjpeg ; grep "OPENJPEG_VERSION" CMakeLists.txt
+fi
 if [ $STEP_CONFIGURE_OPENJPG ] ; then
 echo step 1 - Configure OpenJPEG
 mkdir -p $BLD_OPENJPG ; cd $BLD_OPENJPG
@@ -556,6 +560,10 @@ tar -zxf $JASPER.tar.gz
 rm $JASPER.tar.gz
 fi
 
+if [ $STEP_INFO_JASPER ] ; then   
+echo === Jasper ; cd $SRC_JASPER ; grep "JAS_VERSION" CMakeLists.txt
+fi
+
 if [ $STEP_CONFIGURE_JASPER ] ; then
 echo step 1 - Configure Jasper
 mkdir -p $BLD_JASPER ; cd $BLD_JASPER
@@ -589,6 +597,10 @@ git clone --branch $GLEW --single-branch --depth 1 https://github.com/nigels-com
 
 cd $SRC_GLEW/auto
 make
+fi
+
+if [ $STEP_INFO_GLEW ] ; then
+echo === GLEW ; cd $SRC_GLEW ; grep "GLEW_VERSION_M" include/GL/glew.h
 fi
 
 if [ $STEP_CONFIGURE_GLEW ] ; then
