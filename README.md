@@ -43,7 +43,7 @@ Additionally, you must define the three top-level directories involved in the pr
 		$ cd $EASY_HOME
 		$ ./build.sh
 	
-	If you are brave or have the need for it, define and select your on version set file. I suggest you don't change anything, to get a default, tried and tested setup.
+	If you are brave or have the need for it, define and select your own version set file. I suggest you don't change anything, to get a default, tried and tested setup.
 
 	- Save, ok, exit
 	- Exit
@@ -90,7 +90,7 @@ Additionally, you must define the three top-level directories involved in the pr
 ---
 ### STEP 4: Make installed toolkits available to Xcode project
 
-- This step sets up the `Binaries` directory of the Xcode prject
+- This step sets up the `Binaries` directory of the Xcode project
 
 		$ ./reconfigure.sh
 
@@ -115,7 +115,7 @@ Additionally, you must define the three top-level directories involved in the pr
 	![step5](img/step5.png)
 
 	- menu: "Product", "Scheme", "Edit Scheme...", "Run", "Info", "Build Configuration", select "Development", "Close"
-	- "PROJECT", "Info", Localization, remobe all languages excepr "English - Development Language"
+	- "PROJECT", "Info", Localization, remove all languages except "English - Development Language"
 	- menu: "Product", "Build"
 
 - If when you run the application you get some error with signing certificate, try removing the Signing Identity for the Development configuration:

@@ -81,6 +81,18 @@ config INFO
 if INFO
 menu "Info modules"
 
+config INFO_PNG
+    bool "PNG"
+    default y
+
+config INFO_JPEG
+    bool "JPEG"
+    default y
+
+config INFO_TIFF
+    bool "TIFF"
+    default y
+
 config INFO_VTK
     bool "VTK"
     default y
@@ -92,6 +104,22 @@ config INFO_ITK
 config INFO_DCMTK
     bool "DCMTK"
     default y
+
+config INFO_OPENJPG
+    bool "OpenJPEG"
+    default y
+
+config INFO_JASPER
+    bool "Jasper"
+    default n
+
+config INFO_GLEW
+    bool "GLEW"
+    default n
+
+config INFO_GLM
+    bool "GLM"
+    default n
 
 endmenu
 endif

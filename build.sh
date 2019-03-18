@@ -121,6 +121,13 @@ tar -zxf $PNG.tar.gz
 rm $PNG.tar.gz
 fi
 
+if [ $STEP_INFO_PNG ] ; then
+# Version in source files
+cd $SRC_PNG
+echo === PNG ; grep -E "\(PNGLIB_(MAJOR|MINOR|RELEASE)" CMakeLists.txt
+grep "define PNG_HEADER_VERSION_STRING" png.h
+fi
+
 if [ $STEP_CONFIGURE_LIB_PNG ] ; then
 echo "Configure library $PNG"
 mkdir -p $BLD_PNG ; cd $BLD_PNG
@@ -165,6 +172,12 @@ tar -zxf jpegsrc.v$JPEG_VERSION.tar.gz
 rm jpegsrc.v$JPEG_VERSION.tar.gz
 fi
 
+if [ $STEP_INFO_JPEG ] ; then
+cd $SRC_JPEG
+echo -n "=== JPEG: " ;  grep "JVERSION" jversion.h | cut -d"\"" -f2
+grep "define JPEG_LIB_VERSION" jpeglib.h
+fi
+
 if [ $STEP_CONFIGURE_LIB_JPEG ] ; then
 echo "Configure LIBJPEG in $BLD_JPEG"
 mkdir -p $BLD_JPEG ; cd $BLD_JPEG
@@ -195,6 +208,11 @@ fi
 
 tar -zxf $TIFF.tar.gz
 rm $TIFF.tar.gz
+fi
+
+if [ $STEP_INFO_TIFF ] ; then
+cd $SRC_TIFF
+echo -n "=== TIFF: " ; grep "TIFFLIB_VERSION_STR" libtiff/tiffvers.h | cut -d"\"" -f2 | awk -F '\\\\n' '{print $1}'
 fi
 
 if [ $STEP_CONFIGURE_LIB_TIFF ] ; then
@@ -249,6 +267,14 @@ cd $SRC
 wget https://www.vtk.org/files/release/$VTK_MAJOR.$VTK_MINOR/$VTK.tar.gz
 tar -zxf $VTK.tar.gz
 rm $VTK.tar.gz
+fi
+
+if [ $STEP_INFO_VTK ] ; then
+cd $SRC_VTK
+echo "=== VTK: " ; grep "_VERSION" CMake/vtkVersion.cmake
+echo -n "=== VTK_JPEG: " ; grep "JVERSION" ThirdParty/jpeg/vtkjpeg/jversion.h | cut -d"\"" -f2
+grep "define JPEG_LIB_VERSION" ThirdParty/jpeg/vtkjpeg/jpeglib.h
+echo -n "=== VTK_TIFF: " ; grep "TIFFLIB_VERSION_STR" ThirdParty/tiff/vtktiff/libtiff/tiffvers.h | cut -d"\"" -f2 | awk -F '\\\\n' '{print $1}'
 fi
 
 if [ $STEP_CONFIGURE_VTK ] ; then
@@ -312,6 +338,11 @@ cd $SRC
 wget --no-check-certificate https://downloads.sourceforge.net/project/itk/itk/$ITK_MAJOR.$ITK_MINOR/$ITK.tar.gz
 tar -zxf $ITK.tar.gz
 rm $ITK.tar.gz
+fi
+
+if [ $STEP_INFO_ITK ] ; then
+cd $SRC_ITK 
+echo === ITK ; grep --include=*.txt "(ITK_VERSION" CMakeLists.txt
 fi
 
 if [ $STEP_CONFIGURE_ITK ] ; then
