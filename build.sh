@@ -673,6 +673,7 @@ BINARIES=$SRC/$APP/Binaries
 
 if [ $STEP_UNZIP_BINARIES ] ; then
 pushd $SRC/$APP/doc/build-steps
+sed -i -e 's@SRCROOT=$(pwd)/../@SRCROOT="$(pwd)/../.."@g' ./unzip-binaries.sh  # For version 7.1.34
 ./unzip-binaries.sh
 popd
 fi
