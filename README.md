@@ -1,6 +1,6 @@
 # Miele-LXIV Build System
 
-Copyright  Alex Bettarini, 2019
+Copyright &copy; Alex Bettarini, 2019
 
 ---
 
@@ -8,7 +8,7 @@ The purpose of this project is to assist in setting up and configuring all depen
 
 The directory where this file has been downloaded will be referred to as `EASY_HOME`
 
-Additionally, you must define the three top-level directories involved in the process:
+Additionally, you must define the three top-level directories involved in the process (or conveniently accept the suggested defaults in STEP 1 below):
 
 1. *sources*: `SRC` where all the source files will be downloaded
 2. *build*: `BLD`
@@ -19,7 +19,8 @@ Additionally, you must define the three top-level directories involved in the pr
 
 - kconfig-mconf
 
-	This is a tool normally used in Linux systems to rebuild the kernel with a custom configuration. It's probably possible to install it from [sources](http://distortos.org/documentation/building-kconfig-frontends-linux/), and the dependencies can be installed using brew (gperf ncurses flex bison).<br />
+	This is a tool normally used in Linux systems to rebuild the kernel with a custom configuration. It was chosen because it creates configuration files that work well with shell scripts.<br />
+	It's probably possible to install it from [sources](http://distortos.org/documentation/building-kconfig-frontends-linux/), and the dependencies can be installed using brew (gperf ncurses flex bison).<br />
 	 Instead, I found it very convenient to install it like in the [NuttX](https://bitbucket.org/nuttx/) project:
 	
 		$ mkdir -p $SRC/nuttx
@@ -122,6 +123,8 @@ Additionally, you must define the three top-level directories involved in the pr
 
 	![codesign](img/codesign.png)
 
-- When everything is working, you can start making modifications to the code and re-build the project from Terminal
+---
+- Now the goal of setting up the Xcode project that builds Miele-LXIV has been reached. You should be able to build the application from Xcode, make your modifications to the source files, and start your usual development cycle.<br />
+- If you prefer to work from the Command line, open up Terminal and re-build the project like this:
 
 		$ xcodebuild -configuration Development -target miele-lxiv
