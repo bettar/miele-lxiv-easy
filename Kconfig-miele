@@ -1,0 +1,288 @@
+mainmenu "Miele-LXIV - 3rd Party Modules Configuration"
+
+#-----------------
+config DOWNLOAD
+    bool "Download sources"
+    default n
+
+if DOWNLOAD
+menu "download modules"
+
+config DOWNLOAD_LIB_ICONV
+    bool "iconv"
+    default y
+
+config DOWNLOAD_LIB_PNG
+    bool "lib png"
+    default y
+
+config DOWNLOAD_LIB_Z
+    bool "lib z"
+    default y
+
+config DOWNLOAD_LIB_JPEG
+    bool "lib jpeg"
+    default y
+
+config DOWNLOAD_LIB_TIFF
+    bool "lib tiff"
+    default y
+
+config DOWNLOAD_SOURCES_VTK
+    bool "VTK"
+    default y
+
+config DOWNLOAD_SOURCES_ITK
+    bool "ITK"
+    default y
+
+config DOWNLOAD_SOURCES_DCMTK
+    bool "DCMTK"
+    default y
+    
+config PATCH_DCMTK
+    bool "patch DCMTK"
+    default y
+    depends on DOWNLOAD_SOURCES_DCMTK
+
+config DOWNLOAD_SOURCES_OPENJPG
+    bool "OpenJPEG"
+    default y
+    
+config PATCH_OPENJPG
+    bool "patch OPENJPG"
+    default y
+    depends on DOWNLOAD_SOURCES_OPENJPG
+
+config DOWNLOAD_SOURCES_JASPER
+    bool "Jasper"
+    default n
+
+config DOWNLOAD_SOURCES_GLEW
+    bool "GLEW"
+    default n
+    
+config DOWNLOAD_SOURCES_GML
+    bool "GML"
+    default n
+
+config DOWNLOAD_SOURCES_APP
+    bool "APP"
+    default y
+
+endmenu
+endif # DOWNLOAD
+
+#-------------------------------
+config INFO
+    bool "Show version information"
+    default n
+
+if INFO
+menu "Info modules"
+
+config INFO_VTK
+    bool "VTK"
+    default y
+
+config INFO_ITK
+    bool "ITK"
+    default y
+
+config INFO_DCMTK
+    bool "DCMTK"
+    default y
+
+endmenu
+endif
+
+#------------------------
+config CONFIGURE
+    bool "Configure"
+    default y
+
+if CONFIGURE
+menu "Configure modules"
+
+config CONFIGURE_LIB_PNG
+    bool "lib PNG"
+    default y
+
+config CONFIGURE_LIB_JPEG
+    bool "lib JPEG"
+    default y
+
+config CONFIGURE_LIB_TIFF
+    bool "lib TIFF"
+    default y
+
+config CONFIGURE_VTK
+    bool "VTK"
+    default y
+    
+config CONFIGURE_ITK
+    bool "ITK"
+    default y
+
+config CONFIGURE_DCMTK
+    bool "DCMTK"
+    default y
+
+config CONFIGURE_OPENJPG
+    bool "OpenJPEG"
+    default y
+
+config CONFIGURE_JASPER
+    bool "Jasper"
+    default y
+
+config CONFIGURE_GLEW
+    bool "GLEWn
+
+endmenu
+endif
+
+#------------------------
+    
+config BUILD
+    bool "Build"
+    default y
+    
+if BUILD
+menu "Build modules"
+
+config COMPILE_LIB_PNG
+    bool "Build and install lib PNG"
+    default y
+
+config COMPILE_LIB_JPEG
+    bool "Build and install lib JPEG"
+    default y
+
+config COMPILE_LIB_TIFF
+    bool "Build and install lib TIFF"
+    default y
+
+config COMPILE_VTK
+    bool "Build VTK"
+    default y
+
+config COLLAPSE_VTK
+    bool "Single VTK library"
+    default y
+    depends on COMPILE_VTK
+
+config BUILD_ITK
+    bool "Build ITK"
+    default y
+
+config COLLAPSE_ITK
+    bool "Single ITK library"
+    default y
+    depends on BUILD_ITK
+
+config COMPILE_DCMTK
+    bool "Build DCMTK"
+    default y
+
+config BUILD_OPENJPG
+    bool "Build OpenJPEG"
+    default y
+    
+config BUILD_JASPER
+    bool "Build and install Jasper"
+    default y
+        
+endmenu
+endif
+
+#------------------------
+config INSTALL
+    bool "Install"
+    default y
+    
+if INSTALL
+menu "Install modules"
+
+config INSTALL_DCMTK
+    bool "Build DCMTK"
+    default y
+
+config POST_INSTALL_DCMTK
+    bool "Post-Processing installed DCMTK"
+    default y
+    depends on INSTALL_DCMTK
+    ---help---
+        Do this once, when new sources are updated.
+        
+config COLLAPSE_DCMTK
+    bool "Single DCMTK library"
+    default y
+    depends on INSTALL_DCMTK
+
+config INSTALL_OPENJPG
+    bool "Install OpenJPEG"
+    default y
+
+endmenu
+endif
+
+#------------------------
+config REMOVE_SYMLINKS
+    bool "Remove Symbolic links"
+    default n
+
+#------------------------
+config CREATE_SYMLINKS
+    bool "Create Symbolic links"
+    default n
+    
+if CREATE_SYMLINKS
+menu "Create symlinks"
+
+config UNZIP_BINARIES
+    bool "Unzip binaries"
+    default y
+    
+config CREATE_SYMLINKS_JPEG
+    bool "JPEG"
+    default y
+    
+config CREATE_SYMLINKS_TIFF
+    bool "TIFF"
+    default y
+    
+config CREATE_SYMLINKS_VTK
+    bool "VTK"
+    default y
+    
+config CREATE_SYMLINKS_ITK
+    bool "ITK"
+    default y
+    
+config CREATE_SYMLINKS_DCMTK
+    bool "DCMTK"
+    default y
+    
+config CREATE_SYMLINKS_OPENJPG
+    bool "OpenJPG"
+    default y
+    
+config CREATE_SYMLINKS_PNG
+    bool "PNG"
+    default y
+    
+config CREATE_SYMLINKS_JASPER
+    bool "Jasper"
+    default y
+    
+config CREATE_SYMLINKS_GLEW
+    bool "GLEW"
+    default n
+    
+config CREATE_SYMLINKS_GLM
+    bool "GLM"
+    default n
+    
+endmenu
+endif

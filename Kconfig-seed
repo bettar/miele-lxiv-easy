@@ -1,0 +1,36 @@
+mainmenu "Miele-LXIV - Once-only configuration"
+
+#--------------------------
+config VERSION_SET
+    string "version numbers"
+    default "version-set-7.1.1.conf"
+    ---help---
+        Specify a set of version numbers which are know to work well together
+        The number in the filename is the version number of the VTK package
+
+#--------------------------
+config SRC_DIR
+    string "sources directory"
+    default "~/Downloads/source"
+
+config BLD_DIR
+    string "build directory"
+    default "~/Documents/temp/build"
+
+config BIN_DIR
+    string "install directory"
+    default "~/Applications"
+
+#-------------------------
+
+choice
+    prompt "CMake generator"
+    default GENERATOR_MK
+    
+config GENERATOR_MK
+    bool "makefiles"
+
+config GENERATOR_XC
+    bool "Xcode"
+    
+endchoice
