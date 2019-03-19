@@ -13,8 +13,8 @@ The directory where this README.md file has been downloaded will be referred to 
 Additionally, you must define the three top-level directories involved in the process (or conveniently accept the suggested defaults in STEP 1 below):
 
 1. *sources*: `SRC` where all the source files will be downloaded
-2. *build*: `BLD`
-3. *install*: `BIN`
+2. *build*: `BLD` temporary location for intermediate files
+3. *install*: `BIN` the Xcode project will reference 3rd party modules installed here
 
 ---
 ### Prerequisite tools:
