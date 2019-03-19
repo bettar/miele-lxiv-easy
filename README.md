@@ -46,7 +46,7 @@ Additionally, you must define the three top-level directories involved in the pr
 	
 	If you are brave or have the need for it, define and select your own version set file. I suggest you don't change anything, to get a default, tried and tested setup.
 
-	- Save, ok, exit
+	- Save, Ok, Exit
 	- Exit
 
 	![step1](img/step1.png)
@@ -59,7 +59,7 @@ Additionally, you must define the three top-level directories involved in the pr
 		$ ./reconfigure.sh
 
 	- enable "Download sources" and possibly disable all other steps
-	- Save, ok, exit
+	- Save, Ok, Exit
 	- Exit
 
 	![step2](img/step2.png)
@@ -77,7 +77,7 @@ Additionally, you must define the three top-level directories involved in the pr
 
 	- If "Download sources" is enabled, disable it: you don't want to download everything again.
 	- Enable Configure, Build, Install
-	- Save, ok, exit
+	- Save, Ok, Exit
 	- Exit
 
 	![step3](img/step3.png)
@@ -85,8 +85,7 @@ Additionally, you must define the three top-level directories involved in the pr
 	Run the shell script. This might take a long time. To capture possible errors and warning, save the output to a log file:
 
 		$ script log-$(date +%Y%m%d_%H%M).txt
-		$ ./build.sh
-		$ exit
+		$ ./build.sh ; exit
 
 ---
 ### STEP 4: Make installed toolkits available to Xcode project
@@ -96,7 +95,7 @@ Additionally, you must define the three top-level directories involved in the pr
 		$ ./reconfigure.sh
 
 	- Enable only "Create Symbolic links"
-	- Save, ok, exit
+	- Save, Ok, Exit
 	- Exit
 
 	![step4](img/step4.png)

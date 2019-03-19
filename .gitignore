@@ -1,4 +1,4 @@
 .DS_Store
 log*
-seed.conf*
-steps.conf*
+seed*.conf*
+steps*.conf*

@@ -43,11 +43,13 @@ PNG=libpng-$PNG_VERSION
 ICONV=libiconv-$ICONV_VERSION
 APP=miele-$MIELE_VERSION
 
+#eval SRC=$CONFIG_SRC_DIR  # TODO
 eval SRC=$CONFIG_SRC_DIR/$TIMESTAMP
+eval SRC_P=$CONFIG_SRC_DIR/$TIMESTAMP # patched
 SRC_JPEG=$SRC/$JPEG
 SRC_ITK=$SRC/$ITK
-SRC_DCMTK=$SRC/$DCMTK
-SRC_OPENJPG=$SRC/$OPENJPG
+SRC_DCMTK=$SRC_P/$DCMTK
+SRC_OPENJPG=$SRC_P/$OPENJPG
 SRC_JASPER=$SRC/$JASPER
 SRC_GLEW=$SRC/glew/$GLEW
 SRC_GLM=$SRC/$GLM
@@ -395,10 +397,9 @@ tar -zxf dcmtk-$DCMTK_MAJOR.$DCMTK_MINOR.$DCMTK_BUILD.tar.gz
 rm dcmtk-$DCMTK_MAJOR.$DCMTK_MINOR.$DCMTK_BUILD.tar.gz
 fi
 
-if [ $STEP_PATCH_DCMTK ] ; then
+if [ $STEP_PATCH_DCMTK ] && [ -f ${DCMTK}_${APP}.patch ] ; then
 cd $SRC_DCMTK
-echo ${DCMTK}_${APP}.patch
-echo "current dir: $(pwd)"
+echo "Patch DCMTK"
 #patch --dry-run -p1 -i $EASY_HOME/patch/${DCMTK}_${APP}.patch
 patch -p1 -i $EASY_HOME/patch/${DCMTK}_${APP}.patch
 fi
@@ -524,8 +525,9 @@ if [ $STEP_INFO_OPENJPG ] ; then
 cd $SRC_OPENJPG
 echo === OPENjpeg ; grep "OPENJPEG_VERSION" CMakeLists.txt
 fi
+
 if [ $STEP_CONFIGURE_OPENJPG ] ; then
-echo step 1 - Configure OpenJPEG
+echo "Configure OpenJPEG: $BLD_OPENJPG"
 mkdir -p $BLD_OPENJPG ; cd $BLD_OPENJPG
 $CMAKE -G"$GENERATOR" \
     -D CMAKE_INSTALL_PREFIX=$BIN_OPENJPG \
@@ -540,7 +542,7 @@ $CMAKE -G"$GENERATOR" \
 fi
 
 if [ $STEP_BUILD_OPENJPG ] ; then
-echo step 2 - Build OpenJPEG
+echo "Build OpenJPEG: $BLD_OPENJPG"
 cd $BLD_OPENJPG
 make clean
 make $MAKE_FLAGS
