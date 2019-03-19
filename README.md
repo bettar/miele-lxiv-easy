@@ -4,9 +4,11 @@ Copyright &copy; Alex Bettarini, 2019
 
 ---
 
-The purpose of this project is to assist in setting up and configuring all dependencies for the project [Miele-LXIV](https://github.com/bettar/miele-lxiv) and to ensure that it builds smoothly.
+The purpose of this project is to assist in setting up and configuring all dependencies for the project [Miele-LXIV](https://github.com/bettar/miele-lxiv).
 
-The directory where this file has been downloaded will be referred to as `EASY_HOME`
+In other words, <b>the goal of this project is NOT  to build Miele-LXIV, but to configure the Xcode project that builds Miele-LXIV</b>.
+
+The directory where this README.md file has been downloaded will be referred to as `EASY_HOME`
 
 Additionally, you must define the three top-level directories involved in the process (or conveniently accept the suggested defaults in STEP 1 below):
 
@@ -123,7 +125,10 @@ Additionally, you must define the three top-level directories involved in the pr
 	![codesign](img/codesign.png)
 
 ---
-- Now the goal of setting up the Xcode project that builds Miele-LXIV has been reached. You should be able to build the application from Xcode, make your modifications to the source files, and start your usual development cycle.<br />
+- Now the goal of setting up the Xcode project that builds Miele-LXIV has been reached. You should be able to build the application from Xcode, make your modifications to the source files, and start your usual development cycle.
 - If you prefer to work from the Command line, open up Terminal and re-build the project like this:
 
 		$ xcodebuild -configuration Development -target miele-lxiv
+
+- If you want to reclaim some disk space you can safely remove the `miele-...` subdirectory in $BLD.
+
