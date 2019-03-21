@@ -9,6 +9,13 @@ if [ $? -ne 0 ]; then
     exit 0
 fi
 
+# Check that cmake is installed
+which cmake > /dev/null
+if [ $? -ne 0 ]; then
+    echo "Please install the command-line cmake"
+    exit 0
+fi
+
 if [ ! -f seed.conf ]; then
     ./seed.sh
 
@@ -95,6 +102,7 @@ echo "SRC: $SRC"
 echo "BLD: $BLD"
 echo "BIN: $BIN"
 
+MAKE_FLAGS="-j $(sysctl -n hw.ncpu) VERBOSE=1"
 CMAKE=cmake
 EASY_HOME=$(pwd)
 mkdir -p $SRC

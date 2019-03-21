@@ -35,7 +35,15 @@ Additionally, you must define the three top-level directories involved in the pr
 		$ sudo make install
 
 - wget
-- CMake (make sure the command line tools are installed)
+- cmake
+
+	`CMake` is the GUI application, whereas `cmake` is the CLI utility that we need. If the command `$ which cmake` doesn't return anything, you can install it either with brew:
+	
+		$ brew install cmake
+		
+	or from the GUI package:
+	
+		$ sudo "/Applications/CMake.app/Contents/bin/cmake-gui" --install
 
 		
 ---
