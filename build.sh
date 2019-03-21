@@ -43,21 +43,26 @@ PNG=libpng-$PNG_VERSION
 ICONV=libiconv-$ICONV_VERSION
 APP=miele-$MIELE_VERSION
 
-#eval SRC=$CONFIG_SRC_DIR  # TODO
-eval SRC=$CONFIG_SRC_DIR/$TIMESTAMP
-eval SRC_P=$CONFIG_SRC_DIR/$TIMESTAMP # patched
+if [ $CONFIG_SHARED_SOURCES ] ; then
+    eval SRC=$CONFIG_SRC_DIR
+else
+    eval SRC=$CONFIG_SRC_DIR/$TIMESTAMP
+fi
+eval SRC_P=$CONFIG_SRC_DIR/$TIMESTAMP # patched packages cannot be shared with other projects
+
+SRC_ICONV=$SRC/$ICONV
 SRC_JPEG=$SRC/$JPEG
 SRC_ITK=$SRC/$ITK
-SRC_DCMTK=$SRC_P/$DCMTK
-SRC_OPENJPG=$SRC_P/$OPENJPG
+SRC_DCMTK=$SRC_P/$DCMTK  # patched
+SRC_OPENJPG=$SRC_P/$OPENJPG  # patched
 SRC_JASPER=$SRC/$JASPER
-SRC_GLEW=$SRC/glew/$GLEW
+SRC_GLEW=$SRC/$GLEW
 SRC_GLM=$SRC/$GLM
 SRC_TIFF=$SRC/$TIFF
 SRC_VTK=$SRC/$VTK
-SRC_ZLIB=$SRC/zlib/$ZLIB
+SRC_ZLIB=$SRC/$ZLIB
 SRC_PNG=$SRC/$PNG
-SRC_APP=$SRC
+SRC_APP=$SRC_P/$APP  # patched
 
 eval BLD=$CONFIG_BLD_DIR/$TIMESTAMP
 BLD_JPEG=$BLD/$JPEG${BUILDER_SUFFIX}
@@ -105,7 +110,7 @@ function version_gt() { test "$(printf '%s\n' "$@" | $SORT -V | head -n 1)" != "
 function version_le() { test "$(printf '%s\n' "$@" | $SORT -V | head -n 1)" == "$1"; }
 
 #----------------------------------------------------------------------------
-if [ $STEP_DOWNLOAD_LIB_ICONV ] ; then
+if [ $STEP_DOWNLOAD_LIB_ICONV ] && [ ! -d $SRC_ICONV ] ; then
 cd $SRC
 DCMTK_PAGE=dcmtk$DCMTK_MAJOR$DCMTK_MINOR$DCMTK_BUILD
 curl -O https://dicom.offis.de/download/dcmtk/$DCMTK_PAGE/support/$ICONV.tar.gz
@@ -114,7 +119,7 @@ rm $ICONV.tar.gz
 fi
 
 #----------------------------------------------------------------------------
-if [ $STEP_DOWNLOAD_LIB_PNG ] ; then
+if [ $STEP_DOWNLOAD_LIB_PNG ] && [ ! -d $SRC_PNG ]  ; then
 cd $SRC
 DCMTK_PAGE=dcmtk$DCMTK_MAJOR$DCMTK_MINOR$DCMTK_BUILD
 curl -O https://dicom.offis.de/download/dcmtk/$DCMTK_PAGE/support/$PNG.tar.gz
@@ -153,7 +158,7 @@ make install
 fi
 
 #----------------------------------------------------------------------------
-if [ $STEP_DOWNLOAD_LIB_Z ] ; then
+if [ $STEP_DOWNLOAD_LIB_Z ] && [ ! -d $SRC_ZLIB ] ; then
 cd $SRC
 
 if [ $ZLIB_VERSION == 1.2.5 ] ; then
@@ -167,7 +172,7 @@ rm $ZLIB.tar.gz
 fi
 
 #----------------------------------------------------------------------------
-if [ $STEP_DOWNLOAD_LIB_JPEG ] ; then
+if [ $STEP_DOWNLOAD_LIB_JPEG ] && [ ! -d $SRC_JPEG ] ; then
 cd $SRC
 curl -O http://www.ijg.org/files/jpegsrc.v$JPEG_VERSION.tar.gz
 tar -zxf jpegsrc.v$JPEG_VERSION.tar.gz
@@ -185,7 +190,6 @@ echo "Configure LIBJPEG in $BLD_JPEG"
 mkdir -p $BLD_JPEG ; cd $BLD_JPEG
 $SRC_JPEG/configure \
 		--prefix=$BIN_JPEG
-
 fi
 
 if [ $STEP_COMPILE_LIB_JPEG ] ; then
@@ -197,7 +201,7 @@ make install
 fi
 
 #----------------------------------------------------------------------------
-if [ $STEP_DOWNLOAD_LIB_TIFF ] ; then
+if [ $STEP_DOWNLOAD_LIB_TIFF ] && [ ! -d $SRC_TIFF ] ; then
 cd $SRC
 
 if [ $TIFF_VERSION == 3.9.4 ] ; then
@@ -258,7 +262,7 @@ sed -i '' -e "s/uint64/TIFF_UINT64_T/g" "$BIN_TIFF/include/tiffio.h"
 fi
 
 #-------------------------------------------------------------------------------
-if [ $STEP_DOWNLOAD_SOURCES_VTK ] ; then
+if [ $STEP_DOWNLOAD_SOURCES_VTK ] && [ ! -d $SRC_VTK ] ; then
 cd $SRC
 # See https://github.com/Kitware/VTK/blob/master/Documentation/dev/git/download.md
 #git clone git://vtk.org/VTK.git $VTK
@@ -329,7 +333,7 @@ fi
 fi
 
 #--------------------------------------
-if [ $STEP_DOWNLOAD_SOURCES_ITK ] ; then
+if [ $STEP_DOWNLOAD_SOURCES_ITK ] && [ ! -d $SRC_ITK ] ; then
 #mkdir -p $SRC/ITK ;
 cd $SRC
 # Latest
@@ -390,8 +394,8 @@ fi
 fi
 
 #-------------------------------------------------------------------------------
-if [ $STEP_DOWNLOAD_SOURCES_DCMTK ] ; then
-cd $SRC
+if [ $STEP_DOWNLOAD_SOURCES_DCMTK ] && [ ! -d $SRC_DCMTK ] ; then
+mkdir -p $SRC_DCMTK/.. ; cd $SRC_DCMTK/..
 curl -O "ftp://dicom.offis.de/pub/dicom/offis/software/dcmtk/dcmtk$DCMTK_MAJOR$DCMTK_MINOR$DCMTK_BUILD/dcmtk-$DCMTK_MAJOR.$DCMTK_MINOR.$DCMTK_BUILD.tar.gz"
 tar -zxf dcmtk-$DCMTK_MAJOR.$DCMTK_MINOR.$DCMTK_BUILD.tar.gz
 rm dcmtk-$DCMTK_MAJOR.$DCMTK_MINOR.$DCMTK_BUILD.tar.gz
@@ -422,8 +426,6 @@ fi
 fi
 fi
 
-
-
 if [ $STEP_INFO_DCMTK ] ; then   
 cd $SRC_DCMTK
 echo "=== DCMTK" ; grep "^PACKAGE_VERSION" config/configure
@@ -452,7 +454,6 @@ cd $BLD_DCMTK
 CXXFLAGS="$COMPILER_FLAGS -DFOR_OSIRI_LXIV"
 #make clean
 make $MAKE_FLAGS
-
 fi
 
 if [ $STEP_INSTALL_DCMTK ] ; then        
@@ -503,9 +504,8 @@ fi
 fi
 
 #-------------------------------------------------------------------------------
-if [ $STEP_DOWNLOAD_SOURCES_OPENJPG ] ; then
-cd $SRC
-echo "OPENJPG_VERSION: $OPENJPG_VERSION"
+if [ $STEP_DOWNLOAD_SOURCES_OPENJPG ] && [ ! -d $SRC_OPENJPG ] ; then
+mkdir -p $SRC_OPENJPG/.. ; cd $SRC_OPENJPG/..
 
 #git clone https://github.com/uclouvain/openjpeg.git $OPENJPG
 wget https://github.com/uclouvain/openjpeg/archive/$OPENJPG_TAR.tar.gz
@@ -516,7 +516,6 @@ fi
 if [ $STEP_PATCH_OPENJPG ] ; then
 cd $SRC_OPENJPG
 #echo ${OPENJPG}_${APP}.patch
-echo "current dir: $SRC_OPENJPG"
 #patch --dry-run -p1 -i $EASY_HOME/patch/${OPENJPG}_${APP}.patch
 patch -p1 -i $EASY_HOME/patch/${OPENJPG}_${APP}.patch
 fi
@@ -555,7 +554,7 @@ cp $SRC_OPENJPG/src/bin/common/format_defs.h $BIN_OPENJPG/include
 fi
 
 #-------------------------------------------------------------------------------
-if [ $STEP_DOWNLOAD_SOURCES_JASPER ] ; then
+if [ $STEP_DOWNLOAD_SOURCES_JASPER ] && [ ! -d $SRC_JASPER ] ; then
 cd $SRC
 wget http://www.ece.uvic.ca/~frodo/jasper/software/$JASPER.tar.gz
 tar -zxf $JASPER.tar.gz
@@ -590,7 +589,7 @@ make install
 fi
 
 #----------------------------------------------------------------------------
-if [ $STEP_DOWNLOAD_SOURCES_GLEW ] ; then
+if [ $STEP_DOWNLOAD_SOURCES_GLEW ] && [ ! -d $SRC_GLEW ] ; then
 mkdir -p $SRC/glew ; cd $SRC/glew
 
 # https://sourceforge.net/projects/glew/files/glew/2.1.0/glew-2.1.0.tgz
@@ -628,7 +627,7 @@ make install
 fi
 
 #-------------------------------------------------------------------------------
-if [ $STEP_DOWNLOAD_SOURCES_GML ] ; then
+if [ $STEP_DOWNLOAD_SOURCES_GML ] && [ ! -d $SRC_GLM ] ; then
 cd $SRC
 wget https://github.com/g-truc/glm/archive/$GLM_VERSION.tar.gz
 tar -zxf $GLM_VERSION.tar.gz
@@ -661,24 +660,26 @@ make $MAKE_FLAGS
 make install
 fi
 #-------------------------------------------------------------------------------
-if [ $STEP_DOWNLOAD_SOURCES_APP ] ; then
-cd $SRC
+if [ $STEP_DOWNLOAD_SOURCES_APP ] && [ ! -d $SRC_APP ] ; then
+mkdir -p $SRC_APP/.. ; cd $SRC_APP/..
 # For developers
 #git clone https://github.com/bettar/miele-lxiv.git $APP
 
 # For users (without project history)
 git clone --branch ver$MIELE_VERSION --depth 1 https://github.com/bettar/miele-lxiv.git $APP
-touch $SRC/$APP/doc/build-steps/identity.conf
+touch $SRC_APP/doc/build-steps/identity.conf
 fi
 
-BINARIES=$SRC/$APP/Binaries
+BINARIES=$SRC_APP/Binaries
 
 if [ $STEP_UNZIP_BINARIES ] ; then
-pushd $SRC/$APP/doc/build-steps
+pushd $SRC_APP/doc/build-steps
 sed -i -e 's@SRCROOT=$(pwd)/../@SRCROOT="$(pwd)/../.."@g' ./unzip-binaries.sh  # For version 7.1.34
 ./unzip-binaries.sh
 popd
 fi
+
+# TODO: patch
 
 if [ $STEP_REMOVE_SYMLINKS ] ; then
 echo "Remove symbolic links from $BINARIES"
@@ -707,13 +708,3 @@ if [ $STEP_CREATE_SYMLINKS_JASPER ] ;  then ln -s $BIN_JASPER   $BINARIES/Jasper
 if [ $STEP_CREATE_SYMLINKS_GLEW ] ;    then ln -s $BIN_GLEW     $BINARIES/GLEW ; fi
 if [ $STEP_CREATE_SYMLINKS_GLM ] ;     then ln -s $BIN_GLM      $BINARIES/GLM ; fi
 fi
-
-
-
-
-
-
-
-
-
-
