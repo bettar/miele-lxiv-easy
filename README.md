@@ -107,7 +107,9 @@ Additionally, you must define the three top-level directories involved in the pr
 		$ ./build.sh
 
 ---
-### STEP 5: Xcode
+### STEP 5: Final "workaround" for Xcode
+
+While STEPS 1..4 are nicely engineered to configure the project, there still remains some fixup to be done manually. This step will soon disappear, being replaced by a more elegant *behind the scenes* action. For the time being, please make the effort of doing what is explained below:
 
 - Launch the Xcode project `Miele_LXIV.xcodeproj` located in `SRC`
 
@@ -125,6 +127,8 @@ Additionally, you must define the three top-level directories involved in the pr
 	![codesign](img/codesign.png)
 
 ---
+
+### Conclusion 
 - Now the goal of setting up the Xcode project that builds Miele-LXIV has been reached. You should be able to build the application from Xcode, make your modifications to the source files, and start your usual development cycle.
 - If you prefer to work from the Command line, open up Terminal and re-build the project like this:
 
