@@ -118,9 +118,9 @@ While STEPS 1..4 are nicely engineered to configure the project, there still rem
 		![step5](img/step5.png)
 
 	1.  menu: "Product", "Scheme", "Edit Scheme...", "Run", "Info", "Build Configuration", select "Development", "Close"
-	- "PROJECT", "Info", Localization, remove all languages except "English - Development Language". Unselect the option "Delete localized resources files from disk".
-	- Select the `miele-lxiv` scheme.
-	- menu: "Product", "Build"
+	2. "PROJECT", "Info", Localization, remove all languages except "English - Development Language". Unselect the option "Delete localized resources files from disk".
+	3. Select the `miele-lxiv` scheme.
+	4. menu: "Product", "Build"
 
 - If when you run the application you get some error with signing certificate, try removing the Signing Identity for the Development configuration:
 
