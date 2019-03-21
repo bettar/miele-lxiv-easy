@@ -4,6 +4,8 @@ mainmenu "Miele-LXIV - 3rd Party Modules Configuration"
 config DOWNLOAD
     bool "Download sources"
     default n
+    ---help---
+        Also apply available patches.
 
 if DOWNLOAD
 menu "download modules"

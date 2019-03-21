@@ -401,9 +401,8 @@ tar -zxf dcmtk-$DCMTK_MAJOR.$DCMTK_MINOR.$DCMTK_BUILD.tar.gz
 rm dcmtk-$DCMTK_MAJOR.$DCMTK_MINOR.$DCMTK_BUILD.tar.gz
 fi
 
-if [ $STEP_PATCH_DCMTK ] && [ -f ${DCMTK}_${APP}.patch ] ; then
+if [ $STEP_PATCH_DCMTK ] && [ -f $EASY_HOME/patch/${DCMTK}_${APP}.patch ] ; then
 cd $SRC_DCMTK
-echo "Patch DCMTK"
 #patch --dry-run -p1 -i $EASY_HOME/patch/${DCMTK}_${APP}.patch
 patch -p1 -i $EASY_HOME/patch/${DCMTK}_${APP}.patch
 fi
@@ -513,7 +512,7 @@ tar -zxf $OPENJPG_TAR.tar.gz
 rm $OPENJPG_TAR.tar.gz
 fi
 
-if [ $STEP_PATCH_OPENJPG ] ; then
+if [ $STEP_PATCH_OPENJPG ] && [ -f $EASY_HOME/patch/${OPENJPG}_${APP}.patch ] ; then
 cd $SRC_OPENJPG
 #echo ${OPENJPG}_${APP}.patch
 #patch --dry-run -p1 -i $EASY_HOME/patch/${OPENJPG}_${APP}.patch

@@ -5,7 +5,7 @@ config VERSION_SET
     string "version numbers"
     default "version-set-7.1.1.conf"
     ---help---
-        Specify a set of version numbers which are know to work well together
+        Specify a set of version numbers which are known to work well together.
         The number in the filename is the version number of the VTK package
 
 #--------------------------
