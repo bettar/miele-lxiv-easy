@@ -13,9 +13,10 @@ if [ ! -f seed.conf ]; then
     ./seed.sh
 
     if [ -f seed.conf ]; then
-        echo "TIMESTAMP=miele-$(date +%Y%m%d)" >> seed.conf
+        echo "TIMESTAMP=miele-$(date +%Y%m%d_%H%M)" >> seed.conf
     fi
 
+    mkdir -p log
     exit 0
 fi
 
@@ -65,17 +66,17 @@ SRC_PNG=$SRC/$PNG
 SRC_APP=$SRC_P/$APP  # patched
 
 eval BLD=$CONFIG_BLD_DIR/$TIMESTAMP
-BLD_JPEG=$BLD/$JPEG${BUILDER_SUFFIX}
-BLD_DCMTK=$BLD/$DCMTK${BUILDER_SUFFIX}
-BLD_GLEW=$BLD/$GLEW${BUILDER_SUFFIX}
-BLD_GLM=$BLD/$GLM${BUILDER_SUFFIX}
-BLD_ITK=$BLD/$ITK${BUILDER_SUFFIX}
-BLD_JASPER=$BLD/$JASPER${BUILDER_SUFFIX}
-BLD_OPENJPG=$BLD/$OPENJPG${BUILDER_SUFFIX}
-BLD_TIFF=$BLD/$TIFF${BUILDER_SUFFIX}
-BLD_VTK=$BLD/$VTK${BUILDER_SUFFIX}
-BLD_ZLIB=$BLD/$ZLIB${BUILDER_SUFFIX}
-BLD_PNG=$BLD/$PNG${BUILDER_SUFFIX}
+BLD_JPEG=$BLD/$JPEG
+BLD_DCMTK=$BLD/$DCMTK
+BLD_GLEW=$BLD/$GLEW
+BLD_GLM=$BLD/$GLM
+BLD_ITK=$BLD/$ITK
+BLD_JASPER=$BLD/$JASPER
+BLD_OPENJPG=$BLD/$OPENJPG
+BLD_TIFF=$BLD/$TIFF
+BLD_VTK=$BLD/$VTK
+BLD_ZLIB=$BLD/$ZLIB
+BLD_PNG=$BLD/$PNG
 
 eval BIN=$CONFIG_BIN_DIR/$TIMESTAMP
 BIN_DCMTK=$BIN/$DCMTK
@@ -136,7 +137,7 @@ grep "define PNG_HEADER_VERSION_STRING" png.h
 fi
 
 if [ $STEP_CONFIGURE_LIB_PNG ] ; then
-echo "Configure library $PNG"
+echo "=== Configure library $PNG"
 mkdir -p $BLD_PNG ; cd $BLD_PNG
 
 $CMAKE -G"$GENERATOR" \
@@ -151,9 +152,10 @@ $CMAKE -G"$GENERATOR" \
 fi
 
 if [ $STEP_COMPILE_LIB_PNG ] ; then
-echo "Build library PNG"
+echo "=== Build library PNG"
 cd $BLD_PNG
 make $MAKE_FLAGS
+echo "=== Install library PNG"
 make install
 fi
 
@@ -186,17 +188,18 @@ grep "define JPEG_LIB_VERSION" jpeglib.h
 fi
 
 if [ $STEP_CONFIGURE_LIB_JPEG ] ; then
-echo "Configure LIBJPEG in $BLD_JPEG"
+echo "=== Configure LIBJPEG in $BLD_JPEG"
 mkdir -p $BLD_JPEG ; cd $BLD_JPEG
 $SRC_JPEG/configure \
 		--prefix=$BIN_JPEG
 fi
 
 if [ $STEP_COMPILE_LIB_JPEG ] ; then
-echo "Build LIBJPEG"
+echo "=== Build LIBJPEG"
 cd $BLD_JPEG
 # make -j `sysctl -n hw.ncpu`
 make $MAKE_FLAGS
+echo "=== Install LIBJPEG"
 make install
 fi
 
@@ -222,7 +225,7 @@ echo -n "=== TIFF: " ; grep "TIFFLIB_VERSION_STR" libtiff/tiffvers.h | cut -d"\"
 fi
 
 if [ $STEP_CONFIGURE_LIB_TIFF ] ; then
-echo "Configure library $TIFF"
+echo "=== Configure library $TIFF"
 mkdir -p $BLD_TIFF ; cd $BLD_TIFF
 
 if version_le $TIFF_VERSION 4.0.7 ; then
@@ -250,10 +253,11 @@ fi
 fi
 
 if [ $STEP_COMPILE_LIB_TIFF ] ; then
-echo "Build library LIBTIFF"
+echo "=== Build library LIBTIFF"
 cd $BLD_TIFF
 # make -j `sysctl -n hw.ncpu`
 make $MAKE_FLAGS
+echo "=== Install library LIBTIFF"
 make install
 
 sed -i '' -e "s/typedef TIFF_UINT64_T/\/\/typedef TIFF_UINT64_T/g" "$BIN_TIFF/include/tiff.h"
@@ -284,7 +288,7 @@ echo -n "=== VTK_TIFF: " ; grep "TIFFLIB_VERSION_STR" ThirdParty/tiff/vtktiff/li
 fi
 
 if [ $STEP_CONFIGURE_VTK ] ; then
-echo step 1 - Configure VTK
+echo "=== Configure VTK"
 mkdir -p $BLD_VTK ; cd $BLD_VTK
 #rm -f CMakeCache.txt
 $CMAKE -G"$GENERATOR" \
@@ -306,10 +310,11 @@ $CMAKE -G"$GENERATOR" \
 fi
 
 if [ $STEP_COMPILE_VTK ] ; then
-echo step 3 - Build VTK
+echo "=== Build VTK"
 cd $BLD_VTK
 # make -j `sysctl -n hw.ncpu`
 make $MAKE_FLAGS
+echo "=== Install VTK"
 make install
 
 # TODO: get them into the install directory by enabling the appropriate modules
@@ -324,7 +329,7 @@ if [ $STEP_COLLAPSE_VTK ] ; then
 cd $BIN_VTK
 VTK_COLLAPSED=lib/libVTK.a
 if [ ! -f $VTK_COLLAPSED ] ; then
-    echo "Collapse VTK into a single library"
+    echo "=== Collapse VTK into a single library"
     ARGS=$(find lib -name '*.a' -type f)
     libtool -static -v -o $VTK_COLLAPSED $ARGS
 else
@@ -352,7 +357,7 @@ echo === ITK ; grep --include=*.txt "(ITK_VERSION" CMakeLists.txt
 fi
 
 if [ $STEP_CONFIGURE_ITK ] ; then
-echo step 1 - Configure ITK
+echo "=== Configure ITK"
 mkdir -p $BLD_ITK ; cd $BLD_ITK
 rm -f CMakeCache.txt
 $CMAKE -G"$GENERATOR" \
@@ -372,10 +377,11 @@ $CMAKE -G"$GENERATOR" \
 fi
 
 if [ $STEP_BUILD_ITK ] ; then
-echo "Build and install ITK"
+echo "=== Build ITK"
 cd $BLD_ITK
 #make clean
 make $MAKE_FLAGS
+echo "=== Install ITK"
 make install
 fi
 
@@ -385,11 +391,11 @@ if [ $STEP_COLLAPSE_ITK ] ; then
 cd $BIN_ITK
 ITK_COLLAPSED=lib/libITK.a
 if [ ! -f $ITK_COLLAPSED ] ; then
-    echo "Collapse ITK into a single library"
+    echo "=== Collapse ITK into a single library"
     ARGS=$(find lib -name '*.a' -type f)
     libtool -static -v -o $ITK_COLLAPSED $ARGS
 else
-    echo $ITK_COLLAPSED exists
+    echo "=== $ITK_COLLAPSED exists"
 fi
 fi
 
@@ -403,6 +409,7 @@ fi
 
 if [ $STEP_PATCH_DCMTK ] && [ -f $EASY_HOME/patch/${DCMTK}_${APP}.patch ] ; then
 cd $SRC_DCMTK
+echo "=== Patch DCMTK"
 #patch --dry-run -p1 -i $EASY_HOME/patch/${DCMTK}_${APP}.patch
 patch -p1 -i $EASY_HOME/patch/${DCMTK}_${APP}.patch
 fi
@@ -432,7 +439,7 @@ echo "=== DCMTK" ; grep "^PACKAGE_VERSION" config/configure
 fi
 
 if [ $STEP_CONFIGURE_DCMTK ] ; then
-echo "step 1 - Configure DCMTK"
+echo "=== Configure DCMTK"
 mkdir -p $BLD_DCMTK ; cd $BLD_DCMTK
 rm -f CMakeCache.txt
 $CMAKE -G"$GENERATOR" \
@@ -448,7 +455,7 @@ $CMAKE -G"$GENERATOR" \
 fi
 
 if [ $STEP_COMPILE_DCMTK ] ; then        
-echo "Build DCMTK"
+echo "=== Build DCMTK"
 cd $BLD_DCMTK
 CXXFLAGS="$COMPILER_FLAGS -DFOR_OSIRI_LXIV"
 #make clean
@@ -456,13 +463,13 @@ make $MAKE_FLAGS
 fi
 
 if [ $STEP_INSTALL_DCMTK ] ; then        
-echo "Install DCMTK"
+echo "=== Install DCMTK"
 cd $BLD_DCMTK
 make install
 fi
 
 if [ $STEP_POST_INSTALL_DCMTK ] ; then        
-echo "post-install DCMTK"
+echo "=== Post-install DCMTK"
 cp -R $SRC_DCMTK/dcmjpeg/libijg8 $BIN_DCMTK/include/dcmtk/dcmjpeg
 cp -R $SRC_DCMTK/dcmjpeg/libijg12 $BIN_DCMTK/include/dcmtk/dcmjpeg
 cp -R $SRC_DCMTK/dcmjpeg/libijg16 $BIN_DCMTK/include/dcmtk/dcmjpeg
@@ -475,7 +482,7 @@ fi
 fi
 
 if false; then # Apply the same mods as the previous LXIV release
-echo "post-install DCMTK"
+echo "=== Post-install DCMTK"
 #   If necessary, copy the file instead of making a link because we are going to publish it to the GitHub
 
 #cp $SRC_DCMTK/dcmnet/libsrc/dimget.cc $WD/$LXIV/glue/dcmtk/dcmnet/dimget.mm
@@ -494,7 +501,7 @@ if [ $STEP_COLLAPSE_DCMTK ] ; then
 cd $BIN_DCMTK
 DCMTK_COLLAPSED=lib/libDCMTK.a
 if [ ! -f $DCMTK_COLLAPSED ] ; then
-    echo "Collapse DCMTK into a single library"
+    echo "=== Collapse DCMTK into a single library"
     ARGS=$(find lib -name '*.a' -type f)
     libtool -static -v -o $DCMTK_COLLAPSED $ARGS
 else
@@ -514,6 +521,7 @@ fi
 
 if [ $STEP_PATCH_OPENJPG ] && [ -f $EASY_HOME/patch/${OPENJPG}_${APP}.patch ] ; then
 cd $SRC_OPENJPG
+echo "=== Patch OpenJPEG"
 #echo ${OPENJPG}_${APP}.patch
 #patch --dry-run -p1 -i $EASY_HOME/patch/${OPENJPG}_${APP}.patch
 patch -p1 -i $EASY_HOME/patch/${OPENJPG}_${APP}.patch
@@ -525,7 +533,7 @@ echo === OPENjpeg ; grep "OPENJPEG_VERSION" CMakeLists.txt
 fi
 
 if [ $STEP_CONFIGURE_OPENJPG ] ; then
-echo "Configure OpenJPEG: $BLD_OPENJPG"
+echo "=== Configure OpenJPEG: $BLD_OPENJPG"
 mkdir -p $BLD_OPENJPG ; cd $BLD_OPENJPG
 $CMAKE -G"$GENERATOR" \
     -D CMAKE_INSTALL_PREFIX=$BIN_OPENJPG \
@@ -540,7 +548,7 @@ $CMAKE -G"$GENERATOR" \
 fi
 
 if [ $STEP_BUILD_OPENJPG ] ; then
-echo "Build OpenJPEG: $BLD_OPENJPG"
+echo "=== Build OpenJPEG: $BLD_OPENJPG"
 cd $BLD_OPENJPG
 make clean
 make $MAKE_FLAGS
@@ -548,6 +556,7 @@ fi
 
 if [ $STEP_INSTALL_OPENJPG ] ; then
 cd $BLD_OPENJPG
+echo "=== Install OpenJPEG to: $BIN_OPENJPG"
 make install
 cp $SRC_OPENJPG/src/bin/common/format_defs.h $BIN_OPENJPG/include
 fi
@@ -565,7 +574,7 @@ echo === Jasper ; cd $SRC_JASPER ; grep "JAS_VERSION" CMakeLists.txt
 fi
 
 if [ $STEP_CONFIGURE_JASPER ] ; then
-echo step 1 - Configure Jasper
+echo "=== Configure Jasper"
 mkdir -p $BLD_JASPER ; cd $BLD_JASPER
 $CMAKE -G"$GENERATOR" \
     -D CMAKE_INSTALL_PREFIX=$BIN_JASPER \
@@ -580,10 +589,11 @@ $CMAKE -G"$GENERATOR" \
 fi
 
 if [ $STEP_BUILD_JASPER ] ; then
-echo step 2 - Build Jasper
+echo "=== Build Jasper"
 cd $BLD_JASPER
 make clean
 make $MAKE_FLAGS
+echo "=== Install Jasper"
 make install
 fi
 
@@ -604,7 +614,7 @@ echo === GLEW ; cd $SRC_GLEW ; grep "GLEW_VERSION_M" include/GL/glew.h
 fi
 
 if [ $STEP_CONFIGURE_GLEW ] ; then
-echo step 1 - Configure GLEW
+echo "=== Configure GLEW"
 mkdir -p $BLD_GLEW ; cd $BLD_GLEW
 $CMAKE -G"$GENERATOR" \
     -D CMAKE_INSTALL_PREFIX=$BIN_GLEW \
@@ -618,10 +628,11 @@ $CMAKE -G"$GENERATOR" \
 fi
 
 if [ $STEP_COMPILE_GLEW ] ; then
-echo step 3 - Build GLEW
+echo "=== Build GLEW"
 cd $BLD_GLEW
 # make -j `sysctl -n hw.ncpu`
 make $MAKE_FLAGS
+echo "=== Install GLEW"
 make install
 fi
 
@@ -638,7 +649,7 @@ echo === GLM ; cd $SRC_GLM ; grep -rn --include=*.txt "GLM_VERSION" CMakeLists.t
 fi
 
 if [ $STEP_CONFIGURE_GLM ] ; then
-echo "Configure GLM"
+echo "=== Configure GLM"
 mkdir -p $BLD_GLM ; cd $BLD_GLM
 $CMAKE -G"$GENERATOR" \
     -D CMAKE_INSTALL_PREFIX=$BIN_GLM \
@@ -648,14 +659,14 @@ $CMAKE -G"$GENERATOR" \
     -D CMAKE_CXX_FLAGS="$COMPILER_FLAGS" \
     -D GLM_STATIC_LIBRARY_ENABLE=ON \
     $SRC_GLM
-
 fi
 
 if [ $STEP_BUILD_GLM ] ; then
-echo "Build GLM"
+echo "=== Build GLM"
 cd $BLD_GLM
 #make clean
 make $MAKE_FLAGS
+echo "=== Install GLM"
 make install
 fi
 #-------------------------------------------------------------------------------
@@ -673,6 +684,7 @@ BINARIES=$SRC_APP/Binaries
 
 if [ $STEP_UNZIP_BINARIES ] ; then
 pushd $SRC_APP/doc/build-steps
+echo "=== Unzip Binaries"
 sed -i -e 's@SRCROOT=$(pwd)/../@SRCROOT="$(pwd)/../.."@g' ./unzip-binaries.sh  # For version 7.1.34
 ./unzip-binaries.sh
 popd
@@ -681,7 +693,7 @@ fi
 # TODO: patch
 
 if [ $STEP_REMOVE_SYMLINKS ] ; then
-echo "Remove symbolic links from $BINARIES"
+echo "=== Remove symbolic links from $BINARIES"
 if [ $STEP_REMOVE_SYMLINKS_JPEG ] ;    then rm -f $BINARIES/libjpeg ; fi
 if [ $STEP_REMOVE_SYMLINKS_TIFF ] ;    then rm -f $BINARIES/libtiff ; fi
 if [ $STEP_REMOVE_SYMLINKS_VTK ]  ;    then rm -f $BINARIES/VTK ; fi
@@ -695,7 +707,7 @@ if [ $STEP_REMOVE_SYMLINKS_GLM ] ;     then rm -f $BINARIES/GLM ; fi
 fi
 
 if [ $STEP_CREATE_SYMLINKS ] ; then
-echo "Create symbolic links in $BINARIES"
+echo "=== Create symbolic links in $BINARIES"
 if [ $STEP_CREATE_SYMLINKS_JPEG ] ;    then ln -s $BIN_JPEG     $BINARIES/libjpeg ; fi
 if [ $STEP_CREATE_SYMLINKS_TIFF ] ;    then ln -s $BIN_TIFF     $BINARIES/libtiff ; fi
 if [ $STEP_CREATE_SYMLINKS_VTK ] ;     then ln -s $BIN_VTK      $BINARIES/VTK ; fi

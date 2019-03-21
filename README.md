@@ -86,7 +86,7 @@ Additionally, you must define the three top-level directories involved in the pr
 
 	Run the shell script. This might take a long time. To capture possible errors and warning, save the output to a log file:
 
-		$ script log-$(date +%Y%m%d_%H%M).txt
+		$ script log/$(date +%Y%m%d_%H%M).txt
 		$ ./build.sh ; exit
 
 ---
