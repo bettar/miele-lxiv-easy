@@ -40,15 +40,16 @@ fi
 DCMTK=DCMTK-$DCMTK_VERSION
 GLEW=glew-$GLEW_VERSION
 GLM=glm-$GLM_VERSION
+ICONV=libiconv-$ICONV_VERSION
 ITK=InsightToolkit-$ITK_VERSION
 JASPER=jasper-$JASPER_VERSION
 JPEG=jpeg-$JPEG_VERSION
 OPENJPG=openjpeg-$OPENJPG_VERSION
+OPENSSL=openssl-$OPENSSL_VERSION
+PNG=libpng-$PNG_VERSION
 TIFF=tiff-$TIFF_VERSION
 VTK=VTK-$VTK_VERSION
 ZLIB=zlib-$ZLIB_VERSION
-PNG=libpng-$PNG_VERSION
-ICONV=libiconv-$ICONV_VERSION
 APP=miele-$MIELE_VERSION
 
 if [ $CONFIG_SHARED_SOURCES ] ; then
@@ -58,45 +59,50 @@ else
 fi
 eval SRC_P=$CONFIG_SRC_DIR/$TIMESTAMP # patched packages cannot be shared with other projects
 
-SRC_ICONV=$SRC/$ICONV
-SRC_JPEG=$SRC/$JPEG
-SRC_ITK=$SRC/$ITK
 SRC_DCMTK=$SRC_P/$DCMTK  # patched
-SRC_OPENJPG=$SRC_P/$OPENJPG  # patched
-SRC_JASPER=$SRC/$JASPER
 SRC_GLEW=$SRC/$GLEW
 SRC_GLM=$SRC/$GLM
+SRC_ICONV=$SRC/$ICONV
+SRC_ITK=$SRC/$ITK
+SRC_JASPER=$SRC/$JASPER
+SRC_JPEG=$SRC/$JPEG
+SRC_OPENJPG=$SRC_P/$OPENJPG  # patched
+SRC_OPENSSL=$SRC/$OPENSSL
+SRC_PNG=$SRC/$PNG
 SRC_TIFF=$SRC/$TIFF
 SRC_VTK=$SRC/$VTK
 SRC_ZLIB=$SRC/$ZLIB
-SRC_PNG=$SRC/$PNG
 SRC_APP=$SRC_P/$APP  # patched
 
 eval BLD=$CONFIG_BLD_DIR/$TIMESTAMP
-BLD_JPEG=$BLD/$JPEG
 BLD_DCMTK=$BLD/$DCMTK
 BLD_GLEW=$BLD/$GLEW
 BLD_GLM=$BLD/$GLM
+BLD_ICONV=$BLD/$ICONV
 BLD_ITK=$BLD/$ITK
 BLD_JASPER=$BLD/$JASPER
+BLD_JPEG=$BLD/$JPEG
 BLD_OPENJPG=$BLD/$OPENJPG
+BLD_OPENSSL=$BLD/$OPENSSL
+BLD_PNG=$BLD/$PNG
 BLD_TIFF=$BLD/$TIFF
 BLD_VTK=$BLD/$VTK
 BLD_ZLIB=$BLD/$ZLIB
-BLD_PNG=$BLD/$PNG
 
 eval BIN=$CONFIG_BIN_DIR/$TIMESTAMP
 BIN_DCMTK=$BIN/$DCMTK
 BIN_GLEW=$BIN/$GLEW
 BIN_GLM=$BIN/$GLM
+BIN_ICONV=$BIN/$ICONV
 BIN_ITK=$BIN/$ITK
-BIN_JPEG=$BIN/$JPEG
 BIN_JASPER=$BIN/$JASPER
+BIN_JPEG=$BIN/$JPEG
 BIN_OPENJPG=$BIN/$OPENJPG
+BIN_OPENSSL=$BIN/$OPENSSL
+BIN_PNG=$BIN/$PNG
 BIN_TIFF=$BIN/$TIFF
 BIN_VTK=$BIN/$VTK
 BIN_ZLIB=$BIN/$ZLIB
-BIN_PNG=$BIN/$PNG
 
 echo "SRC: $SRC"
 echo "BLD: $BLD"
@@ -125,6 +131,50 @@ DCMTK_PAGE=dcmtk$DCMTK_MAJOR$DCMTK_MINOR$DCMTK_BUILD
 curl -O https://dicom.offis.de/download/dcmtk/$DCMTK_PAGE/support/$ICONV.tar.gz
 tar -zxf $ICONV.tar.gz
 rm $ICONV.tar.gz
+fi
+
+if [ $STEP_INFO_ICONV ] ; then
+echo === iconv ; cd $SRC_ICONV ; grep "_LIBICONV_VERSION" include/iconv.h.in
+fi
+
+if [ $STEP_CONFIGURE_LIB_ICONV ] ; then
+mkdir -p $BLD_ICONV ; cd $BLD_ICONV
+echo "=== Configure help"
+$SRC_ICONV/configure --help
+echo "=== Configure $ICONV, install to $BIN_ICONV"
+$SRC_ICONV/configure --prefix=$BIN_ICONV --enable-static=yes --enable-shared=no --disable-rpath
+fi
+
+if [ $STEP_COMPILE_LIB_ICONV ] ; then
+echo "=== Build $ICONV"
+cd $BLD_ICONV
+make clean
+make $MAKE_FLAGS
+echo "=== Install $ICONV"
+make install
+fi
+
+#----------------------------------------------------------------------------
+if [ $STEP_DOWNLOAD_SOURCES_OPENSSL ] && [ ! -d $SRC_OPENSSL ] ; then
+cd $SRC
+# https://www.openssl.org/source/$OPENSSL.tar.gz
+DCMTK_PAGE=dcmtk$DCMTK_MAJOR$DCMTK_MINOR$DCMTK_BUILD
+curl -O https://dicom.offis.de/download/dcmtk/$DCMTK_PAGE/support/$OPENSSL.tar.gz
+tar -zxf $OPENSSL.tar.gz
+rm $OPENSSL.tar.gz
+fi
+
+if [ $STEP_CONFIGURE_LIB_OPENSSL ] ; then
+echo "=== Configure $OPENSSL"
+mkdir -p $BLD_OPENSSL ; cd $BLD_OPENSSL
+$SRC_OPENSSL/config --prefix=$BIN_OPENSSL
+fi
+
+if [ $STEP_COMPILE_LIB_OPENSSL ] ; then
+echo "=== Build $OPENSSL"
+cd $BLD_OPENSSL
+make $MAKE_FLAGS
+make install
 fi
 
 #----------------------------------------------------------------------------
@@ -160,8 +210,8 @@ $CMAKE -G"$GENERATOR" \
 fi
 
 if [ $STEP_COMPILE_LIB_PNG ] ; then
-echo "=== Build library PNG"
 cd $BLD_PNG
+echo "=== Build library PNG"
 make $MAKE_FLAGS
 echo "=== Install library PNG"
 make install
@@ -203,8 +253,8 @@ $SRC_JPEG/configure \
 fi
 
 if [ $STEP_COMPILE_LIB_JPEG ] ; then
-echo "=== Build LIBJPEG"
 cd $BLD_JPEG
+echo "=== Build LIBJPEG"
 # make -j `sysctl -n hw.ncpu`
 make $MAKE_FLAGS
 echo "=== Install LIBJPEG"
@@ -422,24 +472,6 @@ echo "=== Patch DCMTK"
 patch -p1 -i $EASY_HOME/patch/${DCMTK}_${APP}.patch
 fi
 
-if false; then
-if [ $STEP_PATCH_DCMTK ] ; then
-if [ $DCMTK_VERSION == 3.6.0 ] || [ $DCMTK_VERSION == 3.6.2 ] ; then
-# Insert at line 28
-sed -i '' '28i\
-#undef verify\
-' "$SRC_DCMTK/dcmdata/include/dcmtk/dcmdata/dcobject.h"
-# Insert at line 9
-sed -i '' '9i\
-#include <vector>\
-' "$SRC_DCMTK/dcmjpls/libcharls/context.h"
-
-sed -i '' -e "s/static OFVector<signed char> rgtableC;/static std::vector<signed char> rgtableC;/g" "$SRC_DCMTK/dcmjpls/libcharls/context.h" # line 107
-sed -i '' -e 's/#include "config.h"/#include "dcmtk/oflog/config.h"/g' "$SRC_DCMTK/dcmjpls/libcharls/pubtypes.h"
-fi
-fi
-fi
-
 if [ $STEP_INFO_DCMTK ] ; then   
 cd $SRC_DCMTK
 echo "=== DCMTK" ; grep "^PACKAGE_VERSION" config/configure
@@ -447,7 +479,7 @@ echo "=== DCMTK" ; grep "^PACKAGE_VERSION" config/configure
 fi
 
 if [ $STEP_CONFIGURE_DCMTK ] ; then
-echo "=== Configure DCMTK"
+echo "=== Configure $DCMTK"
 mkdir -p $BLD_DCMTK ; cd $BLD_DCMTK
 rm -f CMakeCache.txt
 $CMAKE -G"$GENERATOR" \
@@ -455,23 +487,29 @@ $CMAKE -G"$GENERATOR" \
     -D CMAKE_OSX_ARCHITECTURES=x86_64 \
     -D CMAKE_BUILD_TYPE=Release \
     -D CMAKE_OSX_DEPLOYMENT_TARGET=$DEPL_TARG \
+    -D CMAKE_CXX_FLAGS="-D $DCMTK_CXX_FLAGS" \
     -D BUILD_SHARED_LIBS=OFF \
-    -D DCMTK_WITH_ICONV=OFF \
     $DCMTK_OPTIONS \
-    -D CMAKE_CXX_FLAGS="-D FOR_OSIRI_LXIV" \
+    -D Iconv_INCLUDE_DIR=$BIN_ICONV/include \
+    -D Iconv_LIBRARY=$BIN_ICONV/lib/libiconv.dylib \
+    -D WITH_OPENSSLINC=ON \
+    -D OPENSSL_VERSION_CHECK=ON \
+    -D OPENSSL_INCLUDE_DIR=$BIN_OPENSSL/include \
+    -D OPENSSL_CRYPTO_LIBRARY=$BIN_OPENSSL/lib/libcrypto.dylib \
+    -D OPENSSL_SSL_LIBRARY=$BIN_OPENSSL/lib/libssl.dylib \
     $SRC_DCMTK
 fi
 
 if [ $STEP_COMPILE_DCMTK ] ; then        
-echo "=== Build DCMTK"
+echo "=== Build DCMTK in: $BLD_DCMTK"
 cd $BLD_DCMTK
-CXXFLAGS="$COMPILER_FLAGS -DFOR_OSIRI_LXIV"
+CXXFLAGS="$COMPILER_FLAGS -D$DCMTK_CXX_FLAGS"
 #make clean
 make $MAKE_FLAGS
 fi
 
 if [ $STEP_INSTALL_DCMTK ] ; then        
-echo "=== Install DCMTK"
+echo "=== Install DCMTK in: $BIN_DCMTK"
 cd $BLD_DCMTK
 make install
 fi
@@ -484,7 +522,7 @@ cp -R $SRC_DCMTK/dcmjpeg/libijg16 $BIN_DCMTK/include/dcmtk/dcmjpeg
 cp $SRC_DCMTK/dcmjpls/libcharls/intrface.h $BIN_DCMTK/include/dcmtk/dcmjpls
 cp $SRC_DCMTK/dcmjpls/libcharls/pubtypes.h $BIN_DCMTK/include/dcmtk/dcmjpls
 sed -i -e "s@#include \"config.h\"@//#include \"config.h\"@g" "$BIN_DCMTK/include/dcmtk/dcmjpls/pubtypes.h"
-if [ $DCMTK_VERSION != 3.6.2 ] && [ $DCMTK_VERSION != 3.6.3 ] ; then
+if [ $DCMTK_VERSION != 3.6.2 ] && [ $DCMTK_VERSION != 3.6.3 ] && [ $DCMTK_VERSION != 3.6.4 ] ; then
     sed -i -e "s/#define PACKAGE_DATE \"DEV\"/#define PACKAGE_DATE \"$(date +%Y%m%d)\"/g" "$BIN_DCMTK/include/dcmtk/config/osconfig.h"
 fi
 fi
@@ -702,12 +740,14 @@ fi
 
 if [ $STEP_REMOVE_SYMLINKS ] ; then
 echo "=== Remove symbolic links from $BINARIES"
+if [ $STEP_REMOVE_SYMLINKS_ICONV ] ;   then rm -f $BINARIES/libiconv ; fi
 if [ $STEP_REMOVE_SYMLINKS_JPEG ] ;    then rm -f $BINARIES/libjpeg ; fi
 if [ $STEP_REMOVE_SYMLINKS_TIFF ] ;    then rm -f $BINARIES/libtiff ; fi
 if [ $STEP_REMOVE_SYMLINKS_VTK ]  ;    then rm -f $BINARIES/VTK ; fi
 if [ $STEP_REMOVE_SYMLINKS_ITK ] ;     then rm -f $BINARIES/ITK ; fi
 if [ $STEP_REMOVE_SYMLINKS_DCMTK ] ;   then rm -f $BINARIES/DCMTK ; fi
 if [ $STEP_REMOVE_SYMLINKS_OPENJPG ] ; then rm -f $BINARIES/openjpeg ; fi
+if [ $STEP_REMOVE_SYMLINKS_OPENSSL ] ; then rm -f $BINARIES/openssl ; fi
 if [ $STEP_REMOVE_SYMLINKS_PNG ] ;     then rm -f $BINARIES/libpng ; fi
 if [ $STEP_REMOVE_SYMLINKS_JASPER ] ;  then rm -f $BINARIES/Jasper ; fi
 if [ $STEP_REMOVE_SYMLINKS_GLEW ] ;    then rm -f $BINARIES/GLEW ; fi
@@ -716,12 +756,14 @@ fi
 
 if [ $STEP_CREATE_SYMLINKS ] ; then
 echo "=== Create symbolic links in $BINARIES"
+if [ $STEP_CREATE_SYMLINKS_ICONV ] ;   then ln -s $BIN_ICONV    $BINARIES/libiconv ; fi
 if [ $STEP_CREATE_SYMLINKS_JPEG ] ;    then ln -s $BIN_JPEG     $BINARIES/libjpeg ; fi
 if [ $STEP_CREATE_SYMLINKS_TIFF ] ;    then ln -s $BIN_TIFF     $BINARIES/libtiff ; fi
 if [ $STEP_CREATE_SYMLINKS_VTK ] ;     then ln -s $BIN_VTK      $BINARIES/VTK ; fi
 if [ $STEP_CREATE_SYMLINKS_ITK ] ;     then ln -s $BIN_ITK      $BINARIES/ITK ; fi
 if [ $STEP_CREATE_SYMLINKS_DCMTK ] ;   then ln -s $BIN_DCMTK    $BINARIES/DCMTK ; fi
 if [ $STEP_CREATE_SYMLINKS_OPENJPG ] ; then ln -s $BIN_OPENJPG  $BINARIES/openjpeg ; fi
+if [ $STEP_CREATE_SYMLINKS_OPENSSL ] ; then ln -s $BIN_OPENSSL  $BINARIES/openssl ; fi
 if [ $STEP_CREATE_SYMLINKS_PNG ] ;     then ln -s $BIN_PNG      $BINARIES/libpng ; fi
 if [ $STEP_CREATE_SYMLINKS_JASPER ] ;  then ln -s $BIN_JASPER   $BINARIES/Jasper ; fi
 if [ $STEP_CREATE_SYMLINKS_GLEW ] ;    then ln -s $BIN_GLEW     $BINARIES/GLEW ; fi

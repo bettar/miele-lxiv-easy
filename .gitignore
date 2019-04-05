@@ -2,3 +2,4 @@
 log*
 seed*.conf*
 steps*.conf*
+patch/openjpeg-2.2.0_miele-7.3.46.patch
