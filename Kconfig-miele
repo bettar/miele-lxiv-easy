@@ -10,6 +10,10 @@ config DOWNLOAD
 if DOWNLOAD
 menu "download modules"
 
+config DOWNLOAD_SOURCES_OPENSSL
+    bool "OpenSSL"
+    default y
+
 config DOWNLOAD_LIB_ICONV
     bool "iconv"
     default y
@@ -83,6 +87,10 @@ config INFO
 if INFO
 menu "Info modules"
 
+config INFO_ICONV
+    bool "ICONV"
+    default y
+
 config INFO_PNG
     bool "PNG"
     default y
@@ -134,6 +142,14 @@ config CONFIGURE
 if CONFIGURE
 menu "Configure modules"
 
+config CONFIGURE_LIB_ICONV
+    bool "lib ICONV"
+    default y
+
+config CONFIGURE_LIB_OPENSSL
+    bool "lib OpenSSL"
+    default y
+
 config CONFIGURE_LIB_PNG
     bool "lib PNG"
     default y
@@ -167,7 +183,7 @@ config CONFIGURE_JASPER
     default y
 
 config CONFIGURE_GLEW
-    bool "GLEWn
+    bool "GLEW"
 
 endmenu
 endif
@@ -180,6 +196,14 @@ config BUILD
     
 if BUILD
 menu "Build modules"
+
+config COMPILE_LIB_ICONV
+    bool "Build and install lib ICONV"
+    default y
+
+config COMPILE_LIB_OPENSSL
+    bool "Build and install lib OpenSSL"
+    default y
 
 config COMPILE_LIB_PNG
     bool "Build and install lib PNG"
@@ -286,6 +310,10 @@ config CREATE_SYMLINKS_VTK
     bool "VTK"
     default y
     
+config CREATE_SYMLINKS_ICONV
+    bool "ICONV"
+    default y
+    
 config CREATE_SYMLINKS_ITK
     bool "ITK"
     default y
@@ -296,6 +324,10 @@ config CREATE_SYMLINKS_DCMTK
     
 config CREATE_SYMLINKS_OPENJPG
     bool "OpenJPG"
+    default y
+    
+config CREATE_SYMLINKS_OPENSSL
+    bool "OpenSSL"
     default y
     
 config CREATE_SYMLINKS_PNG

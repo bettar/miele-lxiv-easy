@@ -8,7 +8,7 @@ The purpose of this project is to assist in setting up and configuring all depen
 
 In other words, <b>the goal of this project is NOT  to build Miele-LXIV, but to configure the Xcode project that builds Miele-LXIV</b>.
 
-The directory where this README.md file has been downloaded will be referred to as `EASY_HOME`
+The directory where this README.md file has been downloaded shall be referred to as `EASY_HOME`
 
 Additionally, you must define the three top-level directories involved in the process (or conveniently accept the suggested defaults in STEP 1 below):
 
@@ -92,7 +92,7 @@ Additionally, you must define the three top-level directories involved in the pr
 
 	![step3](img/step3.png)
 
-	Run the shell script. This might take a long time. To capture possible errors and warning, save the output to a log file:
+	Run the shell script. This step will run for about one hour. To capture possible errors and warning, save the output to a log file:
 
 		$ script log/$(date +%Y%m%d_%H%M).txt
 		$ ./build.sh ; exit
@@ -117,22 +117,12 @@ Additionally, you must define the three top-level directories involved in the pr
 ---
 ### STEP 5: Final "workaround" for Xcode
 
-While STEPS 1..4 are nicely engineered to configure the project, there still remains some fixup to be done manually. This step will soon disappear, being replaced by a more elegant *behind the scenes* action. For the time being, please make the effort of doing what is explained below:
+While STEPS 1..4 are nicely engineered to configure the project, there still remains some fixup to be done manually. This extra step will soon disappear, being replaced by a more elegant *behind the scenes* action. For the time being, please make the effort of doing what is explained in the link below.
 
-- Launch the Xcode project `Miele_LXIV.xcodeproj` located in `SRC`
+Select the link matching your selection on STEP 1
 
-	-  If required, fixup *libjpeg*, *libpng*, *libtiff*. For older Miele-LXIV versions (7.1.38) you might get some missing files, shown in red in the Xcode project navigator. Using Finder, drag and drop the 3 libraries with the same name from the `BIN` directory where you just built them, to the Xcode project navigator panel, next to the items that show up in red:
-
-		![step5](img/step5.png)
-
-	1.  menu: "Product", "Scheme", "Edit Scheme...", "Run", "Info", "Build Configuration", select "Development", "Close"
-	2. "PROJECT", "Info", Localization, remove all languages except "English - Development Language". Unselect the option "Delete localized resources files from disk".
-	3. Select the `miele-lxiv` scheme.
-	4. menu: "Product", "Build"
-
-- If when you run the application you get some error with signing certificate, try removing the Signing Identity for the Development configuration:
-
-	![codesign](img/codesign.png)
+- [version-set-7.1.38](version-set-7.1.38.step5.md)
+- [version-set-7.3.46](version-set-7.3.46.step5.md) (default)
 
 ---
 
@@ -141,6 +131,8 @@ While STEPS 1..4 are nicely engineered to configure the project, there still rem
 - If you prefer to work from the Command line, open up Terminal and re-build the project like this:
 
 		$ xcodebuild -configuration Development -target miele-lxiv
+		
+	Note that one of the advantages of building the Development version is that it will NOT be sandboxed.
 
 - If you want to reclaim some disk space you can safely remove the `miele-...` subdirectory in $BLD.
 

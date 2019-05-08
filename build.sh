@@ -220,9 +220,10 @@ fi
 #----------------------------------------------------------------------------
 if [ $STEP_DOWNLOAD_LIB_Z ] && [ ! -d $SRC_ZLIB ] ; then
 cd $SRC
+DCMTK_PAGE=dcmtk$DCMTK_MAJOR$DCMTK_MINOR$DCMTK_BUILD
 
 if [ $ZLIB_VERSION == 1.2.5 ] ; then
-    wget https://dicom.offis.de/download/dcmtk/dcmtk360/support/$ZLIB.tar.gz
+    wget https://dicom.offis.de/download/dcmtk/$DCMTK_PAGE/support/$ZLIB.tar.gz
 elif [ $ZLIB_VERSION == 1.2.11 ] ; then
     wget http://zlib.net/$ZLIB.tar.gz
 fi
@@ -255,7 +256,6 @@ fi
 if [ $STEP_COMPILE_LIB_JPEG ] ; then
 cd $BLD_JPEG
 echo "=== Build LIBJPEG"
-# make -j `sysctl -n hw.ncpu`
 make $MAKE_FLAGS
 echo "=== Install LIBJPEG"
 make install
@@ -490,13 +490,15 @@ $CMAKE -G"$GENERATOR" \
     -D CMAKE_CXX_FLAGS="-D $DCMTK_CXX_FLAGS" \
     -D BUILD_SHARED_LIBS=OFF \
     $DCMTK_OPTIONS \
+    -D JPEG_INCLUDE_DIR=$BIN_JPEG/include \
+    -D JPEG_LIBRARY_RELEASE=$BIN_JPEG/lib/libjpeg.a \
+    -D LIBCHARSET_INCLUDE_DIR=$BIN_ICONV/include \
+    -D LIBCHARSET_LIBRARY=$BIN_ICONV/lib/libcharset.a \
     -D Iconv_INCLUDE_DIR=$BIN_ICONV/include \
-    -D Iconv_LIBRARY=$BIN_ICONV/lib/libiconv.dylib \
-    -D WITH_OPENSSLINC=ON \
-    -D OPENSSL_VERSION_CHECK=ON \
+    -D Iconv_LIBRARY=$BIN_ICONV/lib/libiconv.a \
     -D OPENSSL_INCLUDE_DIR=$BIN_OPENSSL/include \
-    -D OPENSSL_CRYPTO_LIBRARY=$BIN_OPENSSL/lib/libcrypto.dylib \
-    -D OPENSSL_SSL_LIBRARY=$BIN_OPENSSL/lib/libssl.dylib \
+    -D OPENSSL_CRYPTO_LIBRARY=$BIN_OPENSSL/lib/libcrypto.a \
+    -D OPENSSL_SSL_LIBRARY=$BIN_OPENSSL/lib/libssl.a \
     $SRC_DCMTK
 fi
 
@@ -724,6 +726,8 @@ mkdir -p $SRC_APP/.. ; cd $SRC_APP/..
 # For users (without project history)
 git clone --branch ver$MIELE_VERSION --depth 1 https://github.com/bettar/miele-lxiv.git $APP
 touch $SRC_APP/doc/build-steps/identity.conf
+touch $SRC_APP/doc/build-steps/fixup-build-phase.sh
+chmod +x $SRC_APP/doc/build-steps/fixup-build-phase.sh
 fi
 
 BINARIES=$SRC_APP/Binaries
