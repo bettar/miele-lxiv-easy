@@ -3,6 +3,10 @@
 
 Launch the Xcode project `Miele_LXIV.xcodeproj` located in `SRC`
 
+- Select the scheme `miele-lxiv`
+
+	![scheme](img/scheme.png)
+
 - Xcode menu: "Product", "Scheme", "Edit Scheme...", "Run", "Info", "Build Configuration", select "Development", "Close"
 - Xcode "PROJECT", "Info", Localization, remove all languages except "English - Development Language". When prompted, unselect the option "Delete localized resources files from disk".
 
@@ -33,8 +37,7 @@ With reference to the following image, change the file extension of two librarie
 ![dylib2a](img/dylib2a.png)
 
 ---
-- In Xcode select the `miele-lxiv` scheme.
-- Xcode  menu: "Product", "Build"
+- Xcode menu: "Product", "Build"
 - If when you build the application you get some error with signing certificate, remove the Signing Identity for the Development configuration:
 
 	![codesign](img/codesign.png)

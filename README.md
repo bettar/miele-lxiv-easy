@@ -92,7 +92,7 @@ Additionally, you must define the three top-level directories involved in the pr
 
 	![step3](img/step3.png)
 
-	Run the shell script. This step will run for about one hour. To capture possible errors and warning, save the output to a log file:
+	Run the shell script. This step will run for about one hour. To capture possible errors and warnings, save the output to a log file:
 
 		$ script log/$(date +%Y%m%d_%H%M).txt
 		$ ./build.sh ; exit
