@@ -1,12 +1,12 @@
 # Miele-LXIV Build System
 
-Copyright &copy; Alex Bettarini, 2019
+Copyright &copy; Alex Bettarini, 2019-2024
 
 ---
 
 The purpose of this project is to assist in setting up and configuring all dependencies for the project [Miele-LXIV](https://github.com/bettar/miele-lxiv).
 
-In other words, <b>the goal of this project is NOT  to build Miele-LXIV, but to configure the Xcode project that builds Miele-LXIV</b>.
+In other words, <b>the goal of this project is NOT to build Miele-LXIV, but to configure the Xcode project that builds Miele-LXIV</b>.
 
 The directory where this README.md file has been downloaded shall be referred to as `EASY_HOME`
 
@@ -26,13 +26,13 @@ Additionally, you must define the three top-level directories involved in the pr
 	 Instead, I found it very convenient to install it like in the [NuttX](https://bitbucket.org/nuttx/) project:
 	
 		$ mkdir -p $SRC/nuttx
-		$ cd $SRC/nuttx
-		$ git clone https://bitbucket.org/nuttx/tools.git
+		$ cd $SRC/nuttx		
 		
 		$ cd $SRC/nuttx/tools/kconfig-frontends
 		$ ./configure --disable-shared --enable-static --disable-gconf --disable-qconf --disable-nconf --disable-utils
 		$ make
 		$ sudo make install
+		$ which kconfig-mcon
 
 - wget
 - cmake
@@ -121,8 +121,9 @@ While STEPS 1..4 are nicely engineered to configure the project, there still rem
 
 Select the link matching your selection on STEP 1
 
+- [version-set-latest](version-set-latest.step5.md) (unstable)
+- [version-set-7.3.46](version-set-7.3.46.step5.md) (stable, default)
 - [version-set-7.1.38](version-set-7.1.38.step5.md)
-- [version-set-7.3.46](version-set-7.3.46.step5.md) (default)
 
 ---
 

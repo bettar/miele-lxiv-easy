@@ -2,6 +2,8 @@
 
 # Alex Bettarini - 15 Mar 2019
 
+APP=miele-easy
+
 # Check that kconfig-mconf is installed
 which kconfig-mconf > /dev/null
 if [ $? -ne 0 ]; then
@@ -20,7 +22,7 @@ if [ ! -f seed.conf ]; then
     ./seed.sh
 
     if [ -f seed.conf ]; then
-        echo "TIMESTAMP=miele-$(date +%Y%m%d_%H%M)" >> seed.conf
+        echo "TIMESTAMP=$APP-$(date +%Y%m%d_%H%M)" >> seed.conf
     fi
 
     mkdir -p log
@@ -37,7 +39,7 @@ elif [ $CONFIG_GENERATOR_MK ] ; then
     GENERATOR="Unix Makefiles"
 fi
 
-DCMTK=DCMTK-$DCMTK_VERSION
+DCMTK=dcmtk-$DCMTK_VERSION
 GLEW=glew-$GLEW_VERSION
 GLM=glm-$GLM_VERSION
 ICONV=libiconv-$ICONV_VERSION
@@ -50,7 +52,7 @@ PNG=libpng-$PNG_VERSION
 TIFF=tiff-$TIFF_VERSION
 VTK=VTK-$VTK_VERSION
 ZLIB=zlib-$ZLIB_VERSION
-APP=miele-$MIELE_VERSION
+MIELE=$APP-$MIELE_VERSION
 
 if [ $CONFIG_SHARED_SOURCES ] ; then
     eval SRC=$CONFIG_SRC_DIR
@@ -72,7 +74,7 @@ SRC_PNG=$SRC/$PNG
 SRC_TIFF=$SRC/$TIFF
 SRC_VTK=$SRC/$VTK
 SRC_ZLIB=$SRC/$ZLIB
-SRC_APP=$SRC_P/$APP  # patched
+SRC_APP=$SRC_P/$MIELE  # patched
 
 eval BLD=$CONFIG_BLD_DIR/$TIMESTAMP
 BLD_DCMTK=$BLD/$DCMTK
@@ -134,7 +136,7 @@ rm $ICONV.tar.gz
 fi
 
 if [ $STEP_INFO_ICONV ] ; then
-echo === iconv ; cd $SRC_ICONV ; grep "_LIBICONV_VERSION" include/iconv.h.in
+echo "=== iconv" ; cd $SRC_ICONV ; grep "_LIBICONV_VERSION" include/iconv.h.in
 fi
 
 if [ $STEP_CONFIGURE_LIB_ICONV ] ; then
@@ -190,7 +192,7 @@ fi
 if [ $STEP_INFO_PNG ] ; then
 # Version in source files
 cd $SRC_PNG
-echo === PNG ; grep -E "\(PNGLIB_(MAJOR|MINOR|RELEASE)" CMakeLists.txt
+echo "=== PNG" ; grep -E "\(PNGLIB_(MAJOR|MINOR|RELEASE)" CMakeLists.txt
 grep "define PNG_HEADER_VERSION_STRING" png.h
 fi
 
@@ -364,11 +366,10 @@ $CMAKE -G"$GENERATOR" \
     -D VTK_USE_SYSTEM_JPEG=ON \
     -D CMAKE_CXX_FLAGS="$COMPILER_FLAGS" \
     $SRC_VTK
-
 fi
 
 if [ $STEP_COMPILE_VTK ] ; then
-echo "=== Build VTK"
+echo "=== Compile VTK"
 cd $BLD_VTK
 # make -j `sysctl -n hw.ncpu`
 make $MAKE_FLAGS
@@ -411,7 +412,7 @@ fi
 
 if [ $STEP_INFO_ITK ] ; then
 cd $SRC_ITK 
-echo === ITK ; grep --include=*.txt "(ITK_VERSION" CMakeLists.txt
+echo "=== ITK" ; grep --include=*.txt "(ITK_VERSION" CMakeLists.txt
 fi
 
 if [ $STEP_CONFIGURE_ITK ] ; then
@@ -435,7 +436,7 @@ $CMAKE -G"$GENERATOR" \
 fi
 
 if [ $STEP_BUILD_ITK ] ; then
-echo "=== Build ITK"
+echo "=== Compile ITK"
 cd $BLD_ITK
 #make clean
 make $MAKE_FLAGS
@@ -460,16 +461,16 @@ fi
 #-------------------------------------------------------------------------------
 if [ $STEP_DOWNLOAD_SOURCES_DCMTK ] && [ ! -d $SRC_DCMTK ] ; then
 mkdir -p $SRC_DCMTK/.. ; cd $SRC_DCMTK/..
-curl -O "ftp://dicom.offis.de/pub/dicom/offis/software/dcmtk/dcmtk$DCMTK_MAJOR$DCMTK_MINOR$DCMTK_BUILD/dcmtk-$DCMTK_MAJOR.$DCMTK_MINOR.$DCMTK_BUILD.tar.gz"
-tar -zxf dcmtk-$DCMTK_MAJOR.$DCMTK_MINOR.$DCMTK_BUILD.tar.gz
-rm dcmtk-$DCMTK_MAJOR.$DCMTK_MINOR.$DCMTK_BUILD.tar.gz
+curl -O "ftp://dicom.offis.de/pub/dicom/offis/software/dcmtk/dcmtk$DCMTK_MAJOR$DCMTK_MINOR$DCMTK_BUILD/$DCMTK.tar.gz"
+tar -zxf $DCMTK.tar.gz
+rm $DCMTK.tar.gz
 fi
 
-if [ $STEP_PATCH_DCMTK ] && [ -f $EASY_HOME/patch/${DCMTK}_${APP}.patch ] ; then
+if [ $STEP_PATCH_DCMTK ] && [ -f $EASY_HOME/patch/${DCMTK}_${MIELE}.patch ] ; then
 cd $SRC_DCMTK
 echo "=== Patch DCMTK"
-#patch --dry-run -p1 -i $EASY_HOME/patch/${DCMTK}_${APP}.patch
-patch -p1 -i $EASY_HOME/patch/${DCMTK}_${APP}.patch
+#patch --dry-run -p1 -i $EASY_HOME/patch/${DCMTK}_${MIELE}.patch
+patch -p1 -i $EASY_HOME/patch/${DCMTK}_${MIELE}.patch
 fi
 
 if [ $STEP_INFO_DCMTK ] ; then   
@@ -567,17 +568,17 @@ tar -zxf $OPENJPG_TAR.tar.gz
 rm $OPENJPG_TAR.tar.gz
 fi
 
-if [ $STEP_PATCH_OPENJPG ] && [ -f $EASY_HOME/patch/${OPENJPG}_${APP}.patch ] ; then
+if [ $STEP_PATCH_OPENJPG ] && [ -f $EASY_HOME/patch/${OPENJPG}_${MIELE}.patch ] ; then
 cd $SRC_OPENJPG
 echo "=== Patch OpenJPEG"
-#echo ${OPENJPG}_${APP}.patch
-#patch --dry-run -p1 -i $EASY_HOME/patch/${OPENJPG}_${APP}.patch
-patch -p1 -i $EASY_HOME/patch/${OPENJPG}_${APP}.patch
+#echo ${OPENJPG}_${MIELE}.patch
+#patch --dry-run -p1 -i $EASY_HOME/patch/${OPENJPG}_${MIELE}.patch
+patch -p1 -i $EASY_HOME/patch/${OPENJPG}_${MIELE}.patch
 fi
 
 if [ $STEP_INFO_OPENJPG ] ; then   
 cd $SRC_OPENJPG
-echo === OPENjpeg ; grep "OPENJPEG_VERSION" CMakeLists.txt
+echo "=== OPENjpeg" ; grep "OPENJPEG_VERSION" CMakeLists.txt
 fi
 
 if [ $STEP_CONFIGURE_OPENJPG ] ; then
@@ -596,7 +597,7 @@ $CMAKE -G"$GENERATOR" \
 fi
 
 if [ $STEP_BUILD_OPENJPG ] ; then
-echo "=== Build OpenJPEG: $BLD_OPENJPG"
+echo "=== Compile OpenJPEG: $BLD_OPENJPG"
 cd $BLD_OPENJPG
 make clean
 make $MAKE_FLAGS
@@ -618,7 +619,7 @@ rm $JASPER.tar.gz
 fi
 
 if [ $STEP_INFO_JASPER ] ; then   
-echo === Jasper ; cd $SRC_JASPER ; grep "JAS_VERSION" CMakeLists.txt
+echo "=== Jasper" ; cd $SRC_JASPER ; grep "JAS_VERSION" CMakeLists.txt
 fi
 
 if [ $STEP_CONFIGURE_JASPER ] ; then
@@ -637,7 +638,7 @@ $CMAKE -G"$GENERATOR" \
 fi
 
 if [ $STEP_BUILD_JASPER ] ; then
-echo "=== Build Jasper"
+echo "=== Compile Jasper"
 cd $BLD_JASPER
 make clean
 make $MAKE_FLAGS
@@ -647,22 +648,32 @@ fi
 
 #----------------------------------------------------------------------------
 if [ $STEP_DOWNLOAD_SOURCES_GLEW ] && [ ! -d $SRC_GLEW ] ; then
-mkdir -p $SRC/glew ; cd $SRC/glew
+cd $SRC
 
-# https://sourceforge.net/projects/glew/files/glew/2.1.0/glew-2.1.0.tgz
-
-git clone --branch $GLEW --single-branch --depth 1 https://github.com/nigels-com/glew.git $GLEW
+if [ $GLEW_VERSION == "latest" ] ; then
+    echo "Download GLEW latest"
+    git clone https://github.com/nigels-com/glew.git $GLEW
+else
+    echo "Download GLEW stable"
+    #wget https://sourceforge.net/projects/glew/files/glew/$GLEW_VERSION/$GLEW.tgz
+    git clone --branch $GLEW --single-branch --depth 1 https://github.com/nigels-com/glew.git $GLEW
+fi
 
 cd $SRC_GLEW/auto
 make
 fi
 
 if [ $STEP_INFO_GLEW ] ; then
-echo === GLEW ; cd $SRC_GLEW ; grep "GLEW_VERSION_M" include/GL/glew.h
+echo "=== Info $GLEW"
+echo "SRC_GLEW: $SRC_GLEW"
+echo "BLD_GLEW: $BLD_GLEW"
+echo "BIN_GLEW: $BIN_GLEW"
+cd $SRC_GLEW
+grep -w "VERSION" include/GL/glew.h
 fi
 
 if [ $STEP_CONFIGURE_GLEW ] ; then
-echo "=== Configure GLEW"
+echo "=== Configure $GLEW"
 mkdir -p $BLD_GLEW ; cd $BLD_GLEW
 $CMAKE -G"$GENERATOR" \
     -D CMAKE_INSTALL_PREFIX=$BIN_GLEW \
@@ -672,15 +683,13 @@ $CMAKE -G"$GENERATOR" \
     -D CMAKE_CXX_FLAGS="$COMPILER_FLAGS" \
     $GLEW_OPTIONS \
     $SRC_GLEW/build/cmake
-
 fi
 
 if [ $STEP_COMPILE_GLEW ] ; then
-echo "=== Build GLEW"
+echo "=== Build $GLEW"
 cd $BLD_GLEW
-# make -j `sysctl -n hw.ncpu`
 make $MAKE_FLAGS
-echo "=== Install GLEW"
+echo "=== Install $GLEW"
 make install
 fi
 
@@ -693,11 +702,11 @@ rm $GLM_VERSION.tar.gz
 fi
 
 if [ $STEP_INFO_GLM ] ; then
-echo === GLM ; cd $SRC_GLM ; grep -rn --include=*.txt "GLM_VERSION" CMakeLists.txt
+echo "=== $GLM" ; cd $SRC_GLM ; grep -rn --include=*.txt "GLM_VERSION" CMakeLists.txt
 fi
 
 if [ $STEP_CONFIGURE_GLM ] ; then
-echo "=== Configure GLM"
+echo "=== Configure $GLM"
 mkdir -p $BLD_GLM ; cd $BLD_GLM
 $CMAKE -G"$GENERATOR" \
     -D CMAKE_INSTALL_PREFIX=$BIN_GLM \
@@ -706,25 +715,43 @@ $CMAKE -G"$GENERATOR" \
     -D CMAKE_OSX_DEPLOYMENT_TARGET=$DEPL_TARG \
     -D CMAKE_CXX_FLAGS="$COMPILER_FLAGS" \
     -D GLM_STATIC_LIBRARY_ENABLE=ON \
+    -D BUILD_STATIC_LIBS=ON \
+    -D GLM_TEST_ENABLE=OFF \
     $SRC_GLM
 fi
 
 if [ $STEP_BUILD_GLM ] ; then
-echo "=== Build GLM"
+echo "=== Compile $GLM"
 cd $BLD_GLM
-#make clean
+make clean
 make $MAKE_FLAGS
-echo "=== Install GLM"
-make install
 fi
+
+if [ $STEP_INSTALL_GLM ] ; then
+echo "=== Install $GLM"
+if [ $GLM_VERSION == 0.9.8.5 ] ; then
+    make install
+else
+    echo "How to install version $GLM_VERSION ?"
+    echo "https://github.com/g-truc/glm/issues/947"
+
+    mkdir -p $BIN_GLM/include
+    ln -s $SRC_GLM/glm $BIN_GLM/include/glm
+    
+    mkdir -p $BIN_GLM/lib
+    cp $BLD_GLM/glm/libglm_shared.dylib $BIN_GLM/lib/
+    cp $BLD_GLM/glm/libglm_static.a $BIN_GLM/lib/
+fi
+fi
+
 #-------------------------------------------------------------------------------
 if [ $STEP_DOWNLOAD_SOURCES_APP ] && [ ! -d $SRC_APP ] ; then
 mkdir -p $SRC_APP/.. ; cd $SRC_APP/..
 # For developers
-#git clone https://github.com/bettar/miele-lxiv.git $APP
+#git clone https://github.com/bettar/miele-lxiv.git $MIELE
 
 # For users (without project history)
-git clone --branch ver$MIELE_VERSION --depth 1 https://github.com/bettar/miele-lxiv.git $APP
+git clone --branch ver$MIELE_VERSION --depth 1 https://github.com/bettar/miele-lxiv.git $MIELE
 touch $SRC_APP/doc/build-steps/identity.conf
 touch $SRC_APP/doc/build-steps/fixup-build-phase.sh
 chmod +x $SRC_APP/doc/build-steps/fixup-build-phase.sh
@@ -737,6 +764,17 @@ pushd $SRC_APP/doc/build-steps
 echo "=== Unzip Binaries"
 sed -i -e 's@SRCROOT=$(pwd)/../@SRCROOT="$(pwd)/../.."@g' ./unzip-binaries.sh  # For version 7.1.34
 ./unzip-binaries.sh
+popd
+
+# Initialize configuration files
+pushd $SRC_APP
+for hFile in url
+do
+if [ ! -f $hFile.h ] ; then
+    cp $hFile.in.h $hFile.h
+    echo "Please edit $hFile.h to suit your preferences"
+fi
+done
 popd
 fi
 

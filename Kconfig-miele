@@ -185,6 +185,9 @@ config CONFIGURE_JASPER
 config CONFIGURE_GLEW
     bool "GLEW"
 
+config CONFIGURE_GLM
+    bool "GLM"
+
 endmenu
 endif
 
@@ -246,6 +249,12 @@ config BUILD_OPENJPG
 config BUILD_JASPER
     bool "Build and install Jasper"
     default y
+
+config COMPILE_GLEW
+    bool "Build and install GLEW"
+
+config BUILD_GLM
+    bool "Build GLM"
         
 endmenu
 endif
@@ -277,6 +286,9 @@ config COLLAPSE_DCMTK
 config INSTALL_OPENJPG
     bool "Install OpenJPEG"
     default y
+
+config INSTALL_GLM
+    bool "Install GLM"
 
 endmenu
 endif
