@@ -6,7 +6,7 @@ Copyright &copy; Alex Bettarini, 2019-2024
 
 The purpose of this project is to assist in setting up and configuring all dependencies for the project [Miele-LXIV](https://github.com/bettar/miele-lxiv).
 
-In other words, <b>the goal of this project is NOT to build Miele-LXIV, but to configure the Xcode project that builds Miele-LXIV</b>.
+In other words, <b>the goal of this project is NOT to build Miele-LXIV, but to create and configure the Xcode project that builds Miele-LXIV</b>.
 
 The directory where this README.md file has been downloaded shall be referred to as `EASY_HOME`
 
@@ -86,7 +86,7 @@ Additionally, you must define the three top-level directories involved in the pr
 		$ ./reconfigure.sh
 
 	- If "Download sources" is enabled, disable it: you don't want to download everything again.
-	- Enable Configure, Build, Install
+	- Enable: Configure, Build, Install
 	- Save, Ok, Exit
 	- Exit
 
@@ -119,11 +119,7 @@ Additionally, you must define the three top-level directories involved in the pr
 
 While STEPS 1..4 are nicely engineered to configure the project, there still remains some fixup to be done manually. This extra step will soon disappear, being replaced by a more elegant *behind the scenes* action. For the time being, please make the effort of doing what is explained in the link below.
 
-Select the link matching your selection on STEP 1
-
-- [version-set-latest](version-set-latest.step5.md) (unstable)
-- [version-set-7.3.46](version-set-7.3.46.step5.md) (stable, default)
-- [version-set-7.1.38](version-set-7.1.38.step5.md)
+- [version-set-8.8](version-set-8.8.step5.md)
 
 ---
 
