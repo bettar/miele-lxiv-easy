@@ -1,0 +1,303 @@
+diff -rupN -x git openjpeg-2.3.1.original/src/lib/openjp2/CMakeLists.txt openjpeg-2.3.1/src/lib/openjp2/CMakeLists.txt
+--- openjpeg-2.3.1.original/src/lib/openjp2/CMakeLists.txt	2019-04-02 14:45:15.000000000 +0200
++++ openjpeg-2.3.1/src/lib/openjp2/CMakeLists.txt	2024-07-26 15:44:52.000000000 +0200
+@@ -19,6 +19,8 @@ set(OPENJPEG_SRCS
+   ${CMAKE_CURRENT_SOURCE_DIR}/dwt.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/event.c
+   ${CMAKE_CURRENT_SOURCE_DIR}/event.h
++  ${CMAKE_CURRENT_SOURCE_DIR}/fmemopen.c
++  ${CMAKE_CURRENT_SOURCE_DIR}/fmemopen.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/image.c
+   ${CMAKE_CURRENT_SOURCE_DIR}/image.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/invert.c
+diff -rupN -x git openjpeg-2.3.1.original/src/lib/openjp2/fmemopen.c openjpeg-2.3.1/src/lib/openjp2/fmemopen.c
+--- openjpeg-2.3.1.original/src/lib/openjp2/fmemopen.c	1970-01-01 01:00:00.000000000 +0100
++++ openjpeg-2.3.1/src/lib/openjp2/fmemopen.c	2024-07-26 15:44:52.000000000 +0200
+@@ -0,0 +1,106 @@
++//
++// Copyright 2011-2014 NimbusKit
++// Originally ported from https://github.com/ingenuitas/python-tesseract/blob/master/fmemopen.c
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//    http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++//
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <sys/mman.h>
++
++struct fmem {
++  size_t pos;
++  size_t size;
++  char *buffer;
++};
++typedef struct fmem fmem_t;
++
++static int readfn(void *handler, char *buf, int size) {
++  fmem_t *mem = handler;
++  size_t available = mem->size - mem->pos;
++  
++  if (size > available) {
++    size = available;
++  }
++  memcpy(buf, mem->buffer + mem->pos, sizeof(char) * size);
++  mem->pos += size;
++  
++  return size;
++}
++
++static int writefn(void *handler, const char *buf, int size) {
++  fmem_t *mem = handler;
++  size_t available = mem->size - mem->pos;
++
++  if (size > available) {
++    size = available;
++  }
++  memcpy(mem->buffer + mem->pos, buf, sizeof(char) * size);
++  mem->pos += size;
++
++  return size;
++}
++
++static fpos_t seekfn(void *handler, fpos_t offset, int whence) {
++  size_t pos;
++  fmem_t *mem = handler;
++
++  switch (whence) {
++    case SEEK_SET: {
++      if (offset >= 0) {
++        pos = (size_t)offset;
++      } else {
++        pos = 0;
++      }
++      break;
++    }
++    case SEEK_CUR: {
++      if (offset >= 0 || (size_t)(-offset) <= mem->pos) {
++        pos = mem->pos + (size_t)offset;
++      } else {
++        pos = 0;
++      }
++      break;
++    }
++    case SEEK_END: pos = mem->size + (size_t)offset; break;
++    default: return -1;
++  }
++
++  if (pos > mem->size) {
++    return -1;
++  }
++
++  mem->pos = pos;
++  return (fpos_t)pos;
++}
++
++static int closefn(void *handler) {
++  free(handler);
++  return 0;
++}
++
++FILE *fmemopen(void *buf, size_t size, const char *mode) {
++  // This data is released on fclose.
++  fmem_t* mem = (fmem_t *) malloc(sizeof(fmem_t));
++
++  // Zero-out the structure.
++  memset(mem, 0, sizeof(fmem_t));
++
++  mem->size = size;
++  mem->buffer = buf;
++
++  // funopen's man page: https://developer.apple.com/library/mac/#documentation/Darwin/Reference/ManPages/man3/funopen.3.html
++  return funopen(mem, readfn, writefn, seekfn, closefn);
++}
+diff -rupN -x git openjpeg-2.3.1.original/src/lib/openjp2/fmemopen.h openjpeg-2.3.1/src/lib/openjp2/fmemopen.h
+--- openjpeg-2.3.1.original/src/lib/openjp2/fmemopen.h	1970-01-01 01:00:00.000000000 +0100
++++ openjpeg-2.3.1/src/lib/openjp2/fmemopen.h	2024-07-26 15:44:52.000000000 +0200
+@@ -0,0 +1,52 @@
++//
++// Copyright 2011-2014 NimbusKit
++// Originally ported from https://github.com/ingenuitas/python-tesseract/blob/master/fmemopen.c
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//    http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++//
++
++#ifndef FMEMOPEN_H_
++#define FMEMOPEN_H_
++
++#if defined __cplusplus
++extern "C" {
++#endif
++
++/**
++ * A BSD port of the fmemopen Linux method using funopen.
++ *
++ * man docs for fmemopen:
++ * http://linux.die.net/man/3/fmemopen
++ *
++ * man docs for funopen:
++ * https://developer.apple.com/library/mac/#documentation/Darwin/Reference/ManPages/man3/funopen.3.html
++ *
++ * This method is ported from ingenuitas' python-tesseract project.
++ *
++ * You must call fclose on the returned file pointer or memory will be leaked.
++ *
++ * @param buf The data that will be used to back the FILE* methods. Must be at least
++ *            @c size bytes.
++ * @param size The size of the @c buf data.
++ * @param mode The permitted stream operation modes.
++ * @return A pointer that can be used in the fread/fwrite/fseek/fclose family of methods.
++ *         If a failure occurred NULL will be returned.
++ * @ingroup NimbusMemoryMappping
++ */
++FILE *fmemopen(void *buf, size_t size, const char *mode);
++
++#ifdef __cplusplus
++}
++#endif
++
++#endif // #ifndef FMEMOPEN_H_
+diff -rupN -x git openjpeg-2.3.1.original/src/lib/openjp2/openjpeg.c openjpeg-2.3.1/src/lib/openjp2/openjpeg.c
+--- openjpeg-2.3.1.original/src/lib/openjp2/openjpeg.c	2019-04-02 14:45:15.000000000 +0200
++++ openjpeg-2.3.1/src/lib/openjp2/openjpeg.c	2024-07-26 15:44:52.000000000 +0200
+@@ -37,6 +37,11 @@
+ 
+ #include "opj_includes.h"
+ 
++#define MIELE_LXIV_ADDITION
++
++#ifdef MIELE_LXIV_ADDITION
++#include "fmemopen.h"
++#endif
+ 
+ /* ---------------------------------------------------------------------- */
+ /* Functions to set the message handlers */
+@@ -91,6 +96,9 @@ OPJ_BOOL OPJ_CALLCONV opj_set_error_hand
+ static OPJ_SIZE_T opj_read_from_file(void * p_buffer, OPJ_SIZE_T p_nb_bytes,
+                                      FILE * p_file)
+ {
++#ifdef MIELE_LXIV_VERBOSE
++    //printf("opj_read_from_file(%p, %ld, %p)\n", p_buffer, p_nb_bytes, p_file);
++#endif
+     OPJ_SIZE_T l_nb_read = fread(p_buffer, 1, p_nb_bytes, p_file);
+     return l_nb_read ? l_nb_read : (OPJ_SIZE_T) - 1;
+ }
+@@ -1050,6 +1058,37 @@ opj_stream_t* OPJ_CALLCONV opj_stream_cr
+     return l_stream;
+ }
+ 
++#ifdef MIELE_LXIV_ADDITION
++opj_stream_t* OPJ_CALLCONV opj_stream_create_buffer_stream (
++                                                            OPJ_BYTE *buf,
++                                                            OPJ_SIZE_T p_size,
++                                                            OPJ_BOOL p_is_read_stream)
++{
++    opj_stream_t* l_stream = 00;
++    FILE *p_file;
++    
++    // https://github.com/NimbusKit/memorymapping/blob/master/src/fmemopen.c
++    p_file = fmemopen((void *)buf, (size_t)p_size, "rb"); //implemented with funopen()
++    
++    if (! p_file)
++	    return NULL;
++    
++    l_stream = opj_stream_create(p_size, p_is_read_stream);
++    if (! l_stream) {
++        fclose(p_file);
++        return NULL;
++    }
++    
++    opj_stream_set_user_data(l_stream, p_file, (opj_stream_free_user_data_fn) fclose);
++    opj_stream_set_user_data_length(l_stream, opj_get_data_length_from_file(p_file));
++    opj_stream_set_read_function(l_stream, (opj_stream_read_fn) opj_read_from_file);
++    opj_stream_set_write_function(l_stream, (opj_stream_write_fn) opj_write_from_file);
++    opj_stream_set_skip_function(l_stream, (opj_stream_skip_fn) opj_skip_from_file);
++    opj_stream_set_seek_function(l_stream, (opj_stream_seek_fn) opj_seek_from_file);
++
++    return l_stream;
++}
++#endif
+ 
+ void* OPJ_CALLCONV opj_image_data_alloc(OPJ_SIZE_T size)
+ {
+diff -rupN -x git openjpeg-2.3.1.original/src/lib/openjp2/openjpeg.h openjpeg-2.3.1/src/lib/openjp2/openjpeg.h
+--- openjpeg-2.3.1.original/src/lib/openjp2/openjpeg.h	2019-04-02 14:45:15.000000000 +0200
++++ openjpeg-2.3.1/src/lib/openjp2/openjpeg.h	2024-07-26 15:44:52.000000000 +0200
+@@ -1222,6 +1222,13 @@ OPJ_API opj_stream_t* OPJ_CALLCONV opj_s
+     OPJ_SIZE_T p_buffer_size,
+     OPJ_BOOL p_is_read_stream);
+ 
++#if 1 // MIELE_LXIV_ADDITION
++    opj_stream_t* OPJ_CALLCONV opj_stream_create_buffer_stream (
++                                                                OPJ_BYTE *buf,
++                                                                OPJ_SIZE_T p_size,
++                                                                OPJ_BOOL p_is_read_stream);
++#endif
++
+ /*
+ ==========================================================
+    event manager functions definitions
+diff -rupN -x git openjpeg-2.3.1.original/thirdparty/libz/gzlib.c openjpeg-2.3.1/thirdparty/libz/gzlib.c
+--- openjpeg-2.3.1.original/thirdparty/libz/gzlib.c	2019-04-02 14:45:15.000000000 +0200
++++ openjpeg-2.3.1/thirdparty/libz/gzlib.c	2024-07-26 15:52:27.000000000 +0200
+@@ -3,6 +3,11 @@
+  * For conditions of distribution and use, see copyright notice in zlib.h
+  */
+ 
++#ifdef __APPLE__
++#include <stdlib.h>
++#include <unistd.h>
++#endif
++
+ #include "gzguts.h"
+ 
+ #if defined(_WIN32) && !defined(__BORLANDC__)
+diff -rupN -x git openjpeg-2.3.1.original/thirdparty/libz/gzread.c openjpeg-2.3.1/thirdparty/libz/gzread.c
+--- openjpeg-2.3.1.original/thirdparty/libz/gzread.c	2019-04-02 14:45:15.000000000 +0200
++++ openjpeg-2.3.1/thirdparty/libz/gzread.c	2024-07-26 15:53:09.000000000 +0200
+@@ -3,6 +3,11 @@
+  * For conditions of distribution and use, see copyright notice in zlib.h
+  */
+ 
++#ifdef __APPLE__
++#include <stdlib.h>
++#include <unistd.h>
++#endif
++
+ #include "gzguts.h"
+ 
+ /* Local functions */
+diff -rupN -x git openjpeg-2.3.1.original/thirdparty/libz/gzwrite.c openjpeg-2.3.1/thirdparty/libz/gzwrite.c
+--- openjpeg-2.3.1.original/thirdparty/libz/gzwrite.c	2019-04-02 14:45:15.000000000 +0200
++++ openjpeg-2.3.1/thirdparty/libz/gzwrite.c	2024-07-26 15:53:35.000000000 +0200
+@@ -3,6 +3,11 @@
+  * For conditions of distribution and use, see copyright notice in zlib.h
+  */
+ 
++#ifdef __APPLE__
++#include <stdlib.h>
++#include <unistd.h>
++#endif
++
+ #include "gzguts.h"
+ 
+ /* Local functions */

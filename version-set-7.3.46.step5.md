@@ -13,7 +13,7 @@ Launch the Xcode project `Miele_LXIV.xcodeproj` located in `SRC`
 ---
 With reference to the following image:
 
-![update-dylib](img/update-dylib-before.png)
+![update-dylib](img/update-dylib-before-7.3.png)
 
 - remove 1,2,3,4,5 (only the reference to the library files)
 
@@ -28,7 +28,7 @@ With reference to the following image:
 
 You end up with this:
 
-![update-dylib](img/update-dylib-after.png)
+![update-dylib](img/update-dylib-after-7.3.png)
 
 ---
 

@@ -26,6 +26,10 @@ config DOWNLOAD_LIB_Z
     bool "lib z"
     default y
 
+config DOWNLOAD_LIB_XML2
+    bool "lib xml2"
+    default y
+
 config DOWNLOAD_LIB_JPEG
     bool "lib jpeg"
     default y
@@ -162,6 +166,14 @@ config CONFIGURE_LIB_TIFF
     bool "lib TIFF"
     default y
 
+config CONFIGURE_LIB_XML2
+    bool "lib XML2"
+    default y
+
+config CONFIGURE_ZLIB
+    bool "lib Z"
+    default y
+
 config CONFIGURE_VTK
     bool "VTK"
     default y
@@ -216,6 +228,14 @@ config COMPILE_LIB_JPEG
     bool "Build and install lib JPEG"
     default y
 
+    config COMPILE_ZLIB
+    bool "Build and install lib Z"
+    default y
+
+    config COMPILE_LIB_XML2
+    bool "Build and install lib XML2"
+    default y
+
 config COMPILE_LIB_TIFF
     bool "Build and install lib TIFF"
     default y
@@ -268,7 +288,7 @@ if INSTALL
 menu "Install modules"
 
 config INSTALL_DCMTK
-    bool "Build DCMTK"
+    bool "Install DCMTK"
     default y
 
 config POST_INSTALL_DCMTK
@@ -316,6 +336,14 @@ config CREATE_SYMLINKS_JPEG
     
 config CREATE_SYMLINKS_TIFF
     bool "TIFF"
+    default y
+
+config CREATE_SYMLINKS_XML2
+    bool "XML2"
+    default y
+    
+config CREATE_SYMLINKS_ZLIB
+    bool "ZLIB"
     default y
     
 config CREATE_SYMLINKS_VTK

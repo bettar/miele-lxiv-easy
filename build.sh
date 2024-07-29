@@ -52,6 +52,7 @@ PNG=libpng-$PNG_VERSION
 TIFF=tiff-$TIFF_VERSION
 VTK=VTK-$VTK_VERSION
 ZLIB=zlib-$ZLIB_VERSION
+XML2=libxml2-v$XML2_VERSION # 'v' since 2.9.13
 MIELE=$APP-$MIELE_VERSION
 
 if [ $CONFIG_SHARED_SOURCES ] ; then
@@ -73,6 +74,7 @@ SRC_OPENSSL=$SRC/$OPENSSL
 SRC_PNG=$SRC/$PNG
 SRC_TIFF=$SRC/$TIFF
 SRC_VTK=$SRC/$VTK
+SRC_XML2=$SRC/$XML2
 SRC_ZLIB=$SRC/$ZLIB
 SRC_APP=$SRC_P/$MIELE  # patched
 
@@ -89,6 +91,7 @@ BLD_OPENSSL=$BLD/$OPENSSL
 BLD_PNG=$BLD/$PNG
 BLD_TIFF=$BLD/$TIFF
 BLD_VTK=$BLD/$VTK
+BLD_XML2=$BLD/$XML2
 BLD_ZLIB=$BLD/$ZLIB
 
 eval BIN=$CONFIG_BIN_DIR/$TIMESTAMP
@@ -104,16 +107,22 @@ BIN_OPENSSL=$BIN/$OPENSSL
 BIN_PNG=$BIN/$PNG
 BIN_TIFF=$BIN/$TIFF
 BIN_VTK=$BIN/$VTK
+BIN_XML2=$BIN/$XML2
 BIN_ZLIB=$BIN/$ZLIB
 
 echo "SRC: $SRC"
 echo "BLD: $BLD"
 echo "BIN: $BIN"
 
-MAKE_FLAGS="-j $(sysctl -n hw.ncpu) VERBOSE=1"
+OSX_ARCHITECTURES=$(uname -m)
+MAKE_FLAGS="-j $(sysctl -n hw.ncpu)"
 CMAKE=cmake
 EASY_HOME=$(pwd)
+eval PATCH_DIR=$EASY_HOME/patch
 mkdir -p $SRC
+
+DCMTK_PAGE=dcmtk${DCMTK_MAJOR}${DCMTK_MINOR}${DCMTK_BUILD}
+DCMTK_PAGE_367=dcmtk367
 
 #-------------------------------------------------------------------------------
 MAJOR_MAC_VERSION=$(sw_vers -productVersion | awk -F '.' '{print $1 "." $2}')
@@ -123,13 +132,15 @@ else
 SORT=gsort
 fi
 
+#DEPL_TARG=10.13
+DEPL_TARG=$MAJOR_MAC_VERSION
+
 function version_gt() { test "$(printf '%s\n' "$@" | $SORT -V | head -n 1)" != "$1"; }
 function version_le() { test "$(printf '%s\n' "$@" | $SORT -V | head -n 1)" == "$1"; }
 
 #----------------------------------------------------------------------------
 if [ $STEP_DOWNLOAD_LIB_ICONV ] && [ ! -d $SRC_ICONV ] ; then
 cd $SRC
-DCMTK_PAGE=dcmtk$DCMTK_MAJOR$DCMTK_MINOR$DCMTK_BUILD
 curl -O https://dicom.offis.de/download/dcmtk/$DCMTK_PAGE/support/$ICONV.tar.gz
 tar -zxf $ICONV.tar.gz
 rm $ICONV.tar.gz
@@ -160,7 +171,6 @@ fi
 if [ $STEP_DOWNLOAD_SOURCES_OPENSSL ] && [ ! -d $SRC_OPENSSL ] ; then
 cd $SRC
 # https://www.openssl.org/source/$OPENSSL.tar.gz
-DCMTK_PAGE=dcmtk$DCMTK_MAJOR$DCMTK_MINOR$DCMTK_BUILD
 curl -O https://dicom.offis.de/download/dcmtk/$DCMTK_PAGE/support/$OPENSSL.tar.gz
 tar -zxf $OPENSSL.tar.gz
 rm $OPENSSL.tar.gz
@@ -182,9 +192,7 @@ fi
 #----------------------------------------------------------------------------
 if [ $STEP_DOWNLOAD_LIB_PNG ] && [ ! -d $SRC_PNG ]  ; then
 cd $SRC
-DCMTK_PAGE=dcmtk$DCMTK_MAJOR$DCMTK_MINOR$DCMTK_BUILD
 curl -O https://dicom.offis.de/download/dcmtk/$DCMTK_PAGE/support/$PNG.tar.gz
-#curl -O ftp://dicom.offis.de/pub/dicom/offis/software/dcmtk/$DCMTK_PAGE/support/$PNG.tar.gz
 tar -zxf $PNG.tar.gz
 rm $PNG.tar.gz
 fi
@@ -202,7 +210,7 @@ mkdir -p $BLD_PNG ; cd $BLD_PNG
 
 $CMAKE -G"$GENERATOR" \
     -D CMAKE_INSTALL_PREFIX=$BIN_PNG \
-    -D CMAKE_OSX_ARCHITECTURES=x86_64 \
+    -D CMAKE_OSX_ARCHITECTURES=$OSX_ARCHITECTURES \
     -D CMAKE_BUILD_TYPE=Release \
     -D CMAKE_OSX_DEPLOYMENT_TARGET=$DEPL_TARG \
     -D PNG_FRAMEWORK=ON \
@@ -222,16 +230,84 @@ fi
 #----------------------------------------------------------------------------
 if [ $STEP_DOWNLOAD_LIB_Z ] && [ ! -d $SRC_ZLIB ] ; then
 cd $SRC
-DCMTK_PAGE=dcmtk$DCMTK_MAJOR$DCMTK_MINOR$DCMTK_BUILD
-
-if [ $ZLIB_VERSION == 1.2.5 ] ; then
-    wget https://dicom.offis.de/download/dcmtk/$DCMTK_PAGE/support/$ZLIB.tar.gz
-elif [ $ZLIB_VERSION == 1.2.11 ] ; then
-    wget http://zlib.net/$ZLIB.tar.gz
-fi
-
+wget https://zlib.net/$ZLIB.tar.gz
 tar -xf $ZLIB.tar.gz
 rm $ZLIB.tar.gz
+fi
+
+if [ $STEP_CONFIGURE_ZLIB ] ; then
+echo -e "\n=== Configure library $ZLIB"
+mkdir -p $BLD_ZLIB ; cd $BLD_ZLIB
+rm -f CMakeCache.txt
+$CMAKE -G"$GENERATOR" \
+    -D CMAKE_INSTALL_PREFIX=$BIN_ZLIB \
+    -D CMAKE_OSX_ARCHITECTURES=$OSX_ARCHITECTURES \
+    -D CMAKE_BUILD_TYPE=Release \
+    -D CMAKE_OSX_DEPLOYMENT_TARGET=$DEPL_TARG \
+    -D BUILD_SHARED_LIBS=ON \
+    -D ZLIB_BUILD_EXAMPLES=ON \
+    -D CMAKE_CXX_FLAGS="$COMPILER_FLAGS" \
+    $SRC_ZLIB
+fi
+
+if [ $STEP_COMPILE_ZLIB ] ; then
+cd $BLD_ZLIB
+echo -e "\n=== Build library $ZLIB"
+make $MAKE_FLAGS
+
+echo -e "\n=== Install library $ZLIB"
+make install
+fi
+
+#----------------------------------------------------------------------------
+if [ $STEP_DOWNLOAD_LIB_XML2 ] ; then
+if [ -d $SRC_XML2 ] ; then
+echo "=== Download $XML2 exists in $SRC_XML2"
+else
+cd $SRC
+echo "=== Download $XML2 from DCMTK_PAGE: $DCMTK_PAGE_367"
+wget https://dicom.offis.de/download/dcmtk/$DCMTK_PAGE_367/support/$XML2.tar.gz
+
+tar -xf $XML2.tar.gz
+rm $XML2.tar.gz
+fi
+fi
+
+if [ $STEP_CONFIGURE_LIB_XML2 ] ; then
+mkdir -p $BLD_XML2 ; cd $BLD_XML2
+
+if version_le $XML2_VERSION 2.9.10 ; then
+echo "=== Configure help"
+$SRC_XML2/configure --help
+echo "=== Configure $XML2, install to $BIN_XML2"
+$SRC_XML2/configure --prefix=$BIN_XML2 --enable-static=yes --enable-shared=no --disable-rpath
+else
+echo "=== Configure with CMake $XML2, install to $BIN_XML2"
+rm -f CMakeCache.txt
+$CMAKE -G"$GENERATOR" \
+    -D CMAKE_INSTALL_PREFIX=$BIN_XML2 \
+    -D CMAKE_OSX_ARCHITECTURES=$OSX_ARCHITECTURES \
+    -D CMAKE_BUILD_TYPE=Release \
+    -D BUILD_SHARED_LIBS=OFF \
+    -D LIBXML2_WITH_TEST=OFF \
+    -D LIBXML2_WITH_LZMA=OFF \
+    -D Iconv_INCLUDE_DIR=$BIN_ICONV/include \
+    -D Iconv_LIBRARY=$BIN_ICONV/lib/libiconv.a \
+	-D ZLIB_INCLUDE_DIR=$BIN_ZLIB/include \
+	-D ZLIB_LIBRARY_RELEASE=$BIN_ZLIB/lib/libz.a \
+    -D CMAKE_OSX_DEPLOYMENT_TARGET=$DEPL_TARG \
+    $SRC_XML2
+fi
+fi
+
+if [ $STEP_COMPILE_LIB_XML2 ] ; then
+echo "=== Build $ICONXML2V"
+cd $BLD_XML2
+make clean
+make $MAKE_FLAGS
+
+echo "=== Install $XML2"
+make install
 fi
 
 #----------------------------------------------------------------------------
@@ -266,15 +342,7 @@ fi
 #----------------------------------------------------------------------------
 if [ $STEP_DOWNLOAD_LIB_TIFF ] && [ ! -d $SRC_TIFF ] ; then
 cd $SRC
-
-if [ $TIFF_VERSION == 3.9.4 ] ; then
-    curl -O ftp://dicom.offis.de/pub/dicom/offis/software/dcmtk/dcmtk360/support/$TIFF.tar.gz
-elif [ $TIFF_VERSION == 4.0.0 ] ; then
-    wget http://download.osgeo.org/libtiff/old/$TIFF.tar.gz
-elif version_gt $TIFF_VERSION 4.0.3 ; then
-    wget http://download.osgeo.org/libtiff/$TIFF.tar.gz
-fi
-
+wget http://download.osgeo.org/libtiff/$TIFF.tar.gz
 tar -zxf $TIFF.tar.gz
 rm $TIFF.tar.gz
 fi
@@ -288,28 +356,21 @@ if [ $STEP_CONFIGURE_LIB_TIFF ] ; then
 echo "=== Configure library $TIFF"
 mkdir -p $BLD_TIFF ; cd $BLD_TIFF
 
-if version_le $TIFF_VERSION 4.0.7 ; then
-export DIRS_LIBINC=$BIN_JPEG/include
-export DIR_JPEGLIB=$BIN_JPEG/lib
-$SRC_TIFF/configure \
-		--with-jpeg-include-dir=$DIRS_LIBINC \
-		--with-jpeg-lib-dir=$DIR_JPEGLIB \
-		--prefix=$BIN_TIFF
-else
 $CMAKE -G"$GENERATOR" \
     -D CMAKE_INSTALL_PREFIX=$BIN_TIFF \
-    -D CMAKE_OSX_ARCHITECTURES=x86_64 \
+    -D CMAKE_OSX_ARCHITECTURES=$OSX_ARCHITECTURES \
     -D CMAKE_BUILD_TYPE=Release \
     -D CMAKE_OSX_DEPLOYMENT_TARGET=$DEPL_TARG \
-    -D BUILD_SHARED_LIBS=ON \
-    -D BUILD_DOCUMENTATION=ON \
+    -D BUILD_SHARED_LIBS=OFF \
+    -D BUILD_DOCUMENTATION=OFF \
     -D BUILD_TESTING=OFF \
     -D lzma=OFF \
+    -D zstd=OFF \
+    -D webp=OFF \
     -D JPEG_INCLUDE_DIR=$BIN_JPEG/include \
     -D JPEG_LIBRARY=$BIN_JPEG/lib/libjpeg.a \
     -D CMAKE_CXX_FLAGS="$COMPILER_FLAGS" \
     $SRC_TIFF
-fi
 fi
 
 if [ $STEP_COMPILE_LIB_TIFF ] ; then
@@ -353,7 +414,7 @@ mkdir -p $BLD_VTK ; cd $BLD_VTK
 #rm -f CMakeCache.txt
 $CMAKE -G"$GENERATOR" \
     -D CMAKE_INSTALL_PREFIX=$BIN_VTK \
-    -D CMAKE_OSX_ARCHITECTURES=x86_64 \
+    -D CMAKE_OSX_ARCHITECTURES=$OSX_ARCHITECTURES \
     -D CMAKE_BUILD_TYPE=Release \
     -D CMAKE_OSX_DEPLOYMENT_TARGET=$DEPL_TARG \
     -D BUILD_SHARED_LIBS=OFF \
@@ -364,6 +425,7 @@ $CMAKE -G"$GENERATOR" \
     $VTK_OPTIONS \
     -D VTK_USE_SYSTEM_TIFF=ON \
     -D VTK_USE_SYSTEM_JPEG=ON \
+    -D VTK_MODULE_ENABLE_VTK_hdf5=NO \
     -D CMAKE_CXX_FLAGS="$COMPILER_FLAGS" \
     $SRC_VTK
 fi
@@ -404,8 +466,7 @@ cd $SRC
 #git clone git://itk.org/ITK.git $ITK
 # Latest stable release, see https://itk.org/Wiki/ITK/Source#Latest_Stable_Release
 #git clone -b release https://itk.org/ITK.git $ITK
-
-wget --no-check-certificate https://downloads.sourceforge.net/project/itk/itk/$ITK_MAJOR.$ITK_MINOR/$ITK.tar.gz
+wget https://github.com/InsightSoftwareConsortium/ITK/releases/download/v$ITK_MAJOR.$ITK_MINOR.$ITK_BUILD/$ITK.tar.gz
 tar -zxf $ITK.tar.gz
 rm $ITK.tar.gz
 fi
@@ -421,7 +482,7 @@ mkdir -p $BLD_ITK ; cd $BLD_ITK
 rm -f CMakeCache.txt
 $CMAKE -G"$GENERATOR" \
     -D CMAKE_INSTALL_PREFIX=$BIN_ITK \
-    -D CMAKE_OSX_ARCHITECTURES=x86_64 \
+    -D CMAKE_OSX_ARCHITECTURES=$OSX_ARCHITECTURES \
     -D CMAKE_BUILD_TYPE=Release \
     -D CMAKE_OSX_DEPLOYMENT_TARGET=$DEPL_TARG \
     -D BUILD_SHARED_LIBS=OFF \
@@ -461,16 +522,19 @@ fi
 #-------------------------------------------------------------------------------
 if [ $STEP_DOWNLOAD_SOURCES_DCMTK ] && [ ! -d $SRC_DCMTK ] ; then
 mkdir -p $SRC_DCMTK/.. ; cd $SRC_DCMTK/..
-curl -O "ftp://dicom.offis.de/pub/dicom/offis/software/dcmtk/dcmtk$DCMTK_MAJOR$DCMTK_MINOR$DCMTK_BUILD/$DCMTK.tar.gz"
+#curl -O "ftp://dicom.offis.de/pub/dicom/offis/software/dcmtk/$DCMTK_PAGE/$DCMTK.tar.gz"
+wget "https://dicom.offis.de/download/dcmtk/$DCMTK_PAGE/$DCMTK.tar.gz"
 tar -zxf $DCMTK.tar.gz
 rm $DCMTK.tar.gz
 fi
 
-if [ $STEP_PATCH_DCMTK ] && [ -f $EASY_HOME/patch/${DCMTK}_${MIELE}.patch ] ; then
+PATCH_FILENAME=${DCMTK}_${MIELE}.patch
+
+if [ $STEP_PATCH_DCMTK ] && [ -f $PATCH_DIR/$PATCH_FILENAME ] ; then
 cd $SRC_DCMTK
 echo "=== Patch DCMTK"
-#patch --dry-run -p1 -i $EASY_HOME/patch/${DCMTK}_${MIELE}.patch
-patch -p1 -i $EASY_HOME/patch/${DCMTK}_${MIELE}.patch
+#patch --dry-run -p1 -i $PATCH_DIR/$PATCH_FILENAME
+patch -p1 -i $PATCH_DIR/$PATCH_FILENAME
 fi
 
 if [ $STEP_INFO_DCMTK ] ; then   
@@ -485,7 +549,7 @@ mkdir -p $BLD_DCMTK ; cd $BLD_DCMTK
 rm -f CMakeCache.txt
 $CMAKE -G"$GENERATOR" \
     -D CMAKE_INSTALL_PREFIX=$BIN_DCMTK \
-    -D CMAKE_OSX_ARCHITECTURES=x86_64 \
+    -D CMAKE_OSX_ARCHITECTURES=$OSX_ARCHITECTURES \
     -D CMAKE_BUILD_TYPE=Release \
     -D CMAKE_OSX_DEPLOYMENT_TARGET=$DEPL_TARG \
     -D CMAKE_CXX_FLAGS="-D $DCMTK_CXX_FLAGS" \
@@ -497,6 +561,8 @@ $CMAKE -G"$GENERATOR" \
     -D LIBCHARSET_LIBRARY=$BIN_ICONV/lib/libcharset.a \
     -D Iconv_INCLUDE_DIR=$BIN_ICONV/include \
     -D Iconv_LIBRARY=$BIN_ICONV/lib/libiconv.a \
+    -D WITH_OPENSSLINC=ON \
+    -D OPENSSL_VERSION_CHECK=ON \
     -D OPENSSL_INCLUDE_DIR=$BIN_OPENSSL/include \
     -D OPENSSL_CRYPTO_LIBRARY=$BIN_OPENSSL/lib/libcrypto.a \
     -D OPENSSL_SSL_LIBRARY=$BIN_OPENSSL/lib/libssl.a \
@@ -507,8 +573,13 @@ if [ $STEP_COMPILE_DCMTK ] ; then
 echo "=== Build DCMTK in: $BLD_DCMTK"
 cd $BLD_DCMTK
 CXXFLAGS="$COMPILER_FLAGS -D$DCMTK_CXX_FLAGS"
-#make clean
+make clean
+# If you get errors about _EVP_PKEY_get_bits, comment in the following 4 brew lines
+#brew unlink openssl@3
+#brew link openssl@1.1
 make $MAKE_FLAGS
+#brew unlink openssl@1.1
+#brew link openssl@3
 fi
 
 if [ $STEP_INSTALL_DCMTK ] ; then        
@@ -568,12 +639,15 @@ tar -zxf $OPENJPG_TAR.tar.gz
 rm $OPENJPG_TAR.tar.gz
 fi
 
-if [ $STEP_PATCH_OPENJPG ] && [ -f $EASY_HOME/patch/${OPENJPG}_${MIELE}.patch ] ; then
+PATCH_FILENAME=${OPENJPG}_${MIELE}.patch
+
+if [ $STEP_PATCH_OPENJPG ] ; then
 cd $SRC_OPENJPG
 echo "=== Patch OpenJPEG"
-#echo ${OPENJPG}_${MIELE}.patch
-#patch --dry-run -p1 -i $EASY_HOME/patch/${OPENJPG}_${MIELE}.patch
-patch -p1 -i $EASY_HOME/patch/${OPENJPG}_${MIELE}.patch
+if [ -f $PATCH_DIR/$PATCH_FILENAME ] ; then
+#patch --dry-run -p1 -i $PATCH_DIR/$PATCH_FILENAME
+patch -p1 -i $PATCH_DIR/$PATCH_FILENAME
+fi
 fi
 
 if [ $STEP_INFO_OPENJPG ] ; then   
@@ -586,7 +660,7 @@ echo "=== Configure OpenJPEG: $BLD_OPENJPG"
 mkdir -p $BLD_OPENJPG ; cd $BLD_OPENJPG
 $CMAKE -G"$GENERATOR" \
     -D CMAKE_INSTALL_PREFIX=$BIN_OPENJPG \
-    -D CMAKE_OSX_ARCHITECTURES=x86_64 \
+    -D CMAKE_OSX_ARCHITECTURES=$OSX_ARCHITECTURES \
     -D CMAKE_BUILD_TYPE=Release \
     -D CMAKE_OSX_DEPLOYMENT_TARGET=$DEPL_TARG \
     -D CMAKE_EXPORT_COMPILE_COMMANDS=ON \
@@ -613,7 +687,7 @@ fi
 #-------------------------------------------------------------------------------
 if [ $STEP_DOWNLOAD_SOURCES_JASPER ] && [ ! -d $SRC_JASPER ] ; then
 cd $SRC
-wget http://www.ece.uvic.ca/~frodo/jasper/software/$JASPER.tar.gz
+wget https://github.com/jasper-software/jasper/releases/download/version-$JASPER_VERSION/jasper.tar.gz -O $JASPER.tar.gz
 tar -zxf $JASPER.tar.gz
 rm $JASPER.tar.gz
 fi
@@ -627,13 +701,14 @@ echo "=== Configure Jasper"
 mkdir -p $BLD_JASPER ; cd $BLD_JASPER
 $CMAKE -G"$GENERATOR" \
     -D CMAKE_INSTALL_PREFIX=$BIN_JASPER \
-    -D CMAKE_OSX_ARCHITECTURES=x86_64 \
+    -D CMAKE_OSX_ARCHITECTURES=$OSX_ARCHITECTURES \
     -D CMAKE_BUILD_TYPE=Release \
     -D CMAKE_OSX_DEPLOYMENT_TARGET=$DEPL_TARG \
     -D CMAKE_EXPORT_COMPILE_COMMANDS=ON \
     -D CMAKE_CXX_FLAGS="$COMPILER_FLAGS" \
     -D JAS_ENABLE_AUTOMATIC_DEPENDENCIES=OFF \
     -D JAS_ENABLE_SHARED=OFF \
+    -D JAS_ENABLE_PROGRAMS=OFF \
     $SRC_JASPER
 fi
 
@@ -660,6 +735,7 @@ else
 fi
 
 cd $SRC_GLEW/auto
+#ln -s /usr/local/bin/python3 /usr/local/bin/python
 make
 fi
 
@@ -677,7 +753,7 @@ echo "=== Configure $GLEW"
 mkdir -p $BLD_GLEW ; cd $BLD_GLEW
 $CMAKE -G"$GENERATOR" \
     -D CMAKE_INSTALL_PREFIX=$BIN_GLEW \
-    -D CMAKE_OSX_ARCHITECTURES=x86_64 \
+    -D CMAKE_OSX_ARCHITECTURES=$OSX_ARCHITECTURES \
     -D CMAKE_BUILD_TYPE=Release \
     -D CMAKE_OSX_DEPLOYMENT_TARGET=$DEPL_TARG \
     -D CMAKE_CXX_FLAGS="$COMPILER_FLAGS" \
@@ -710,7 +786,7 @@ echo "=== Configure $GLM"
 mkdir -p $BLD_GLM ; cd $BLD_GLM
 $CMAKE -G"$GENERATOR" \
     -D CMAKE_INSTALL_PREFIX=$BIN_GLM \
-    -D CMAKE_OSX_ARCHITECTURES=x86_64 \
+    -D CMAKE_OSX_ARCHITECTURES=$OSX_ARCHITECTURES \
     -D CMAKE_BUILD_TYPE=Release \
     -D CMAKE_OSX_DEPLOYMENT_TARGET=$DEPL_TARG \
     -D CMAKE_CXX_FLAGS="$COMPILER_FLAGS" \
@@ -730,6 +806,7 @@ fi
 if [ $STEP_INSTALL_GLM ] ; then
 echo "=== Install $GLM"
 if [ $GLM_VERSION == 0.9.8.5 ] ; then
+    cd $BLD_GLM
     make install
 else
     echo "How to install version $GLM_VERSION ?"
@@ -746,12 +823,17 @@ fi
 
 #-------------------------------------------------------------------------------
 if [ $STEP_DOWNLOAD_SOURCES_APP ] && [ ! -d $SRC_APP ] ; then
+#if [ $STEP_DOWNLOAD_SOURCES_APP ] ; then
 mkdir -p $SRC_APP/.. ; cd $SRC_APP/..
 # For developers
 #git clone https://github.com/bettar/miele-lxiv.git $MIELE
 
+echo "MIELE_VERSION=$MIELE_VERSION, SRC_APP=$SRC_APP" 
+set -x # echo on
+
 # For users (without project history)
 git clone --branch ver$MIELE_VERSION --depth 1 https://github.com/bettar/miele-lxiv.git $MIELE
+#git clone --depth 5 https://github.com/bettar/miele-lxiv.git $MIELE
 touch $SRC_APP/doc/build-steps/identity.conf
 touch $SRC_APP/doc/build-steps/fixup-build-phase.sh
 chmod +x $SRC_APP/doc/build-steps/fixup-build-phase.sh
@@ -785,6 +867,8 @@ echo "=== Remove symbolic links from $BINARIES"
 if [ $STEP_REMOVE_SYMLINKS_ICONV ] ;   then rm -f $BINARIES/libiconv ; fi
 if [ $STEP_REMOVE_SYMLINKS_JPEG ] ;    then rm -f $BINARIES/libjpeg ; fi
 if [ $STEP_REMOVE_SYMLINKS_TIFF ] ;    then rm -f $BINARIES/libtiff ; fi
+if [ $STEP_REMOVE_SYMLINKS_XML2 ]  ;   then rm -f $BINARIES/libxml2 ; fi
+if [ $STEP_REMOVE_SYMLINKS_ZLIB ] ;    then rm -f $BINARIES/zlib ; fi
 if [ $STEP_REMOVE_SYMLINKS_VTK ]  ;    then rm -f $BINARIES/VTK ; fi
 if [ $STEP_REMOVE_SYMLINKS_ITK ] ;     then rm -f $BINARIES/ITK ; fi
 if [ $STEP_REMOVE_SYMLINKS_DCMTK ] ;   then rm -f $BINARIES/DCMTK ; fi
@@ -801,6 +885,8 @@ echo "=== Create symbolic links in $BINARIES"
 if [ $STEP_CREATE_SYMLINKS_ICONV ] ;   then ln -s $BIN_ICONV    $BINARIES/libiconv ; fi
 if [ $STEP_CREATE_SYMLINKS_JPEG ] ;    then ln -s $BIN_JPEG     $BINARIES/libjpeg ; fi
 if [ $STEP_CREATE_SYMLINKS_TIFF ] ;    then ln -s $BIN_TIFF     $BINARIES/libtiff ; fi
+if [ $STEP_CREATE_SYMLINKS_XML2 ] ;    then ln -s $BIN_XML2     $BINARIES/libxml2 ; fi
+if [ $STEP_CREATE_SYMLINKS_ZLIB ] ;    then ln -s $BIN_ZLIB     $BINARIES/zlib ; fi
 if [ $STEP_CREATE_SYMLINKS_VTK ] ;     then ln -s $BIN_VTK      $BINARIES/VTK ; fi
 if [ $STEP_CREATE_SYMLINKS_ITK ] ;     then ln -s $BIN_ITK      $BINARIES/ITK ; fi
 if [ $STEP_CREATE_SYMLINKS_DCMTK ] ;   then ln -s $BIN_DCMTK    $BINARIES/DCMTK ; fi

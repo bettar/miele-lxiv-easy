@@ -3,7 +3,7 @@ mainmenu "Miele-LXIV - Once-only configuration"
 #--------------------------
 config VERSION_SET
     string "version numbers"
-    default "version-set-7.3.46.conf"
+    default "version-set-8.8.conf"
     ---help---
         Specify a set of version numbers which are known to work well together.
         The number in the filename is the version number of the VTK package
