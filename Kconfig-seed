@@ -3,10 +3,9 @@ mainmenu "Miele-LXIV - Once-only configuration"
 #--------------------------
 config VERSION_SET
     string "version numbers"
-    default "version-set-8.8.conf"
+    default "version-set-latest.conf"
     ---help---
         Specify a set of version numbers which are known to work well together.
-        The number in the filename is the version number of the VTK package
 
 #--------------------------
 config SRC_DIR
@@ -15,7 +14,7 @@ config SRC_DIR
     
 config BLD_DIR
     string "build directory"
-    default "~/Documents/temp/build"
+    default "~/Documents/temp.nosync/build"
 
 config BIN_DIR
     string "install directory"

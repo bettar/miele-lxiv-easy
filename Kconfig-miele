@@ -70,11 +70,15 @@ config DOWNLOAD_SOURCES_JASPER
 
 config DOWNLOAD_SOURCES_GLEW
     bool "GLEW"
-    default n
+    default y
     
 config DOWNLOAD_SOURCES_GML
     bool "GML"
-    default n
+    default y
+
+config DOWNLOAD_MING
+    bool "SWF (Flash) output library"
+    default y
 
 config DOWNLOAD_SOURCES_APP
     bool "APP"
@@ -196,9 +200,15 @@ config CONFIGURE_JASPER
 
 config CONFIGURE_GLEW
     bool "GLEW"
+    default y
 
 config CONFIGURE_GLM
     bool "GLM"
+    default y
+
+config CONFIGURE_LIB_MING
+    bool "lib MING"
+    default y
 
 endmenu
 endif
@@ -272,9 +282,15 @@ config BUILD_JASPER
 
 config COMPILE_GLEW
     bool "Build and install GLEW"
+    default y
 
 config BUILD_GLM
-    bool "Build GLM"
+    bool "Build and install GLM"
+    default y
+        
+config COMPILE_LIB_MING
+    bool "Build and install Ming"
+    default y
         
 endmenu
 endif
@@ -307,8 +323,8 @@ config INSTALL_OPENJPG
     bool "Install OpenJPEG"
     default y
 
-config INSTALL_GLM
-    bool "Install GLM"
+#config INSTALL_GLM
+#    bool "Install GLM"
 
 endmenu
 endif
@@ -380,11 +396,15 @@ config CREATE_SYMLINKS_JASPER
     
 config CREATE_SYMLINKS_GLEW
     bool "GLEW"
-    default n
+    default y
     
 config CREATE_SYMLINKS_GLM
     bool "GLM"
-    default n
+    default y    
+
+config CREATE_SYMLINKS_MING
+    bool "Ming"
+    default y
     
 endmenu
 endif

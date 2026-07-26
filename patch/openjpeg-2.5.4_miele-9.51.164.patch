@@ -1,0 +1,68 @@
+diff -rupN -x .git openjpeg-2.5.4.original/src/lib/openjp2/openjpeg.c openjpeg-2.5.4/src/lib/openjp2/openjpeg.c
+--- openjpeg-2.5.4.original/src/lib/openjp2/openjpeg.c	2025-09-20 19:46:23
++++ openjpeg-2.5.4/src/lib/openjp2/openjpeg.c	2025-12-30 06:10:03
+@@ -1091,7 +1091,6 @@ opj_stream_t* OPJ_CALLCONV opj_stream_create_file_stre
+     OPJ_SIZE_T p_size,
+     OPJ_BOOL p_is_read_stream)
+ {
+-    opj_stream_t* l_stream = 00;
+     FILE *p_file;
+     const char *mode;
+ 
+@@ -1111,7 +1110,9 @@ opj_stream_t* OPJ_CALLCONV opj_stream_create_file_stre
+         return NULL;
+     }
+ 
+-    l_stream = opj_stream_create(p_size, p_is_read_stream);
++    opj_stream_t* l_stream = 00;
++//    l_stream = opj_stream_create(p_size, p_is_read_stream);
++    l_stream = opj_stream_create_stream(p_file, p_size, p_is_read_stream);
+     if (! l_stream) {
+         fclose(p_file);
+         return NULL;
+@@ -1129,6 +1130,30 @@ opj_stream_t* OPJ_CALLCONV opj_stream_create_file_stre
+     return l_stream;
+ }
+ 
++opj_stream_t* OPJ_CALLCONV opj_stream_create_stream(
++    FILE *p_file,
++    OPJ_SIZE_T p_size,
++    OPJ_BOOL p_is_read_stream)
++{
++    if (! p_file)
++        return NULL;
++
++    opj_stream_t* l_stream = 00;
++    l_stream = opj_stream_create(p_size, p_is_read_stream);
++    if (! l_stream)
++        return NULL;
++    opj_stream_set_user_data(l_stream, p_file,
++                             opj_close_from_file);
++    opj_stream_set_user_data_length(l_stream,
++                                    opj_get_data_length_from_file(p_file));
++    opj_stream_set_read_function(l_stream, opj_read_from_file);
++    opj_stream_set_write_function(l_stream,
++                                  (opj_stream_write_fn) opj_write_from_file);
++    opj_stream_set_skip_function(l_stream, opj_skip_from_file);
++    opj_stream_set_seek_function(l_stream, opj_seek_from_file);
++
++    return l_stream;
++}
+ 
+ void* OPJ_CALLCONV opj_image_data_alloc(OPJ_SIZE_T size)
+ {
+diff -rupN -x .git openjpeg-2.5.4.original/src/lib/openjp2/openjpeg.h openjpeg-2.5.4/src/lib/openjp2/openjpeg.h
+--- openjpeg-2.5.4.original/src/lib/openjp2/openjpeg.h	2025-09-20 19:46:23
++++ openjpeg-2.5.4/src/lib/openjp2/openjpeg.h	2025-12-30 06:15:17
+@@ -1265,6 +1265,11 @@ OPJ_API opj_stream_t* OPJ_CALLCONV opj_stream_create_f
+     OPJ_SIZE_T p_buffer_size,
+     OPJ_BOOL p_is_read_stream);
+ 
++OPJ_API opj_stream_t* OPJ_CALLCONV opj_stream_create_stream(
++    FILE *p_file,
++    OPJ_SIZE_T p_size,
++    OPJ_BOOL p_is_read_stream);
++
+ /*
+ ==========================================================
+    event manager functions definitions

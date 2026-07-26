@@ -1,6 +1,6 @@
 # Miele-LXIV Build System
 
-Copyright &copy; Alex Bettarini, 2019-2024
+Copyright &copy; Alex Bettarini, 2019-2026
 
 ---
 
@@ -21,18 +21,17 @@ Additionally, you must define the three top-level directories involved in the pr
 
 - kconfig-mconf
 
-	This is a tool normally used in Linux systems to rebuild the kernel with a custom configuration. It was chosen because it creates configuration files that work well with shell scripts.<br />
-	It's probably possible to install it from [sources](http://distortos.org/documentation/building-kconfig-frontends-linux/), and the dependencies can be installed using brew (gperf ncurses flex bison).<br />
-	 Instead, I found it very convenient to install it like in the [NuttX](https://bitbucket.org/nuttx/) project:
-	
-		$ mkdir -p $SRC/nuttx
-		$ cd $SRC/nuttx		
-		
-		$ cd $SRC/nuttx/tools/kconfig-frontends
-		$ ./configure --disable-shared --enable-static --disable-gconf --disable-qconf --disable-nconf --disable-utils
+	This is a tool normally used in Linux systems to rebuild the kernel with a custom configuration. It was chosen because it creates configuration files that work well with shell scripts.
+
+	See [Install](https://nuttx.apache.org/docs/latest/quickstart/install.html)
+
+		$ git clone https://github.com/patacongo/tools
+		$ cd tools/kconfig-frontends
+		$ patch < ../kconfig-macos.diff -p 1
+		$ ./configure --enable-mconf --disable-shared --enable-static --disable-gconf --disable-qconf --disable-nconf
 		$ make
 		$ sudo make install
-		$ which kconfig-mcon
+		$ which kconfig-mconf
 
 - wget
 - cmake
@@ -45,7 +44,6 @@ Additionally, you must define the three top-level directories involved in the pr
 	
 		$ sudo "/Applications/CMake.app/Contents/bin/cmake-gui" --install
 
-		
 ---
 ### STEP 1: Once-only configuration
 
@@ -115,11 +113,41 @@ Additionally, you must define the three top-level directories involved in the pr
 		$ ./build.sh
 
 ---
-### STEP 5: Final "workaround" for Xcode
+### STEP 5: Adjustments to the Xcode project file
 
-While STEPS 1..4 are nicely engineered to configure the project, there still remains some fixup to be done manually. This extra step will soon disappear, being replaced by a more elegant *behind the scenes* action. For the time being, please make the effort of doing what is explained in the link below.
+Launch the Xcode project `Miele_LXIV.xcodeproj` located in `SRC`
 
-- [version-set-8.8](version-set-8.8.step5.md)
+- Select the scheme `miele-lxiv`
+
+	![scheme](img/scheme.png)
+
+- Xcode menu: "Product", "Scheme", "Edit Scheme...", "Run", "Info", "Build Configuration", select "Development", "Close"
+
+
+- using the project navigator
+	- update the location of:
+	 	- dicom.dic
+		- echoscu
+	- delete the following, then add them again by Drag&Drop from installed dirs:
+		- libpng16.a {miele-lxiv}
+		- libz.a {miele-lxiv, MieleAPI, Decompress}
+		- libming.a {Decompress}
+
+		{reference files in place}
+		- libxml2.a {miele-lxiv, Decompress, DICOMPrint}
+		- libtiff.6.dylib  {miele-lxiv} <-- Fix location
+
+	- remove reference to `JPEGtoDICOM.mieleplugin`
+
+- PROJECT, Build Settings, Deployment, macOS Deployment Target
+	- change from "macOS 10.15" to "macOS 26.5"
+	- repeat for each TARGET
+
+- TARGETS, miele-lxiv, Build Phases
+	- search for "dciodvfy", tick box "Code Sign in Co..."
+	- Embed frameworks, search tiff, add libtiff.6.dylib
+
+- Xcode menu: "Product", "Build"
 
 ---
 
@@ -129,7 +157,7 @@ While STEPS 1..4 are nicely engineered to configure the project, there still rem
 
 		$ xcodebuild -configuration Development -target miele-lxiv
 		
-	Note that one of the advantages of building the Development version is that it will NOT be sandboxed.
+	Note that one of the advantages of building the Development configuration is that it will NOT be sandboxed.
 
 - If you want to reclaim some disk space you can safely remove the `miele-...` subdirectory in $BLD.
 

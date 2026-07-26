@@ -1,0 +1,717 @@
+Binary files dcmtk-3.7.0.original/.DS_Store and dcmtk-3.7.0/.DS_Store differ
+Binary files dcmtk-3.7.0.original/dcmdata/.DS_Store and dcmtk-3.7.0/dcmdata/.DS_Store differ
+diff -rupN dcmtk-3.7.0.original/dcmdata/include/dcmtk/dcmdata/dcobject.h dcmtk-3.7.0/dcmdata/include/dcmtk/dcmdata/dcobject.h
+--- dcmtk-3.7.0.original/dcmdata/include/dcmtk/dcmdata/dcobject.h	2025-12-15 08:28:13
++++ dcmtk-3.7.0/dcmdata/include/dcmtk/dcmdata/dcobject.h	2025-12-30 06:31:23
+@@ -25,6 +25,7 @@
+ #ifndef DCOBJECT_H
+ #define DCOBJECT_H
+ 
++#undef verify // FOR_MIELE_LXIV
+ #include "dcmtk/config/osconfig.h"    /* make sure OS specific configuration is included first */
+ 
+ #include "dcmtk/ofstd/ofglobal.h"
+diff -rupN dcmtk-3.7.0.original/dcmdata/libsrc/dcdatset.cc dcmtk-3.7.0/dcmdata/libsrc/dcdatset.cc
+--- dcmtk-3.7.0.original/dcmdata/libsrc/dcdatset.cc	2025-12-15 08:28:13
++++ dcmtk-3.7.0/dcmdata/libsrc/dcdatset.cc	2025-12-30 06:29:44
+@@ -40,6 +40,9 @@
+ #include "dcmtk/dcmdata/dcostrms.h"    /* for class DcmStdoutStream */
+ #include "dcmtk/dcmdata/dcwcache.h"    /* for class DcmWriteCache */
+ 
++#ifndef FOR_MIELE_LXIV
++#error lxiv not defined
++#endif
+ 
+ // ********************************
+ 
+@@ -238,6 +241,10 @@ OFBool DcmDataset::canWriteXfer(const E_TransferSyntax
+ OFBool DcmDataset::canWriteXfer(const E_TransferSyntax newXfer,
+                                 const E_TransferSyntax oldXfer)
+ {
++#ifdef FOR_MIELE_LXIV
++    //First : GE private group...
++    delete remove( DcmTagKey( 0x0009, 0x1110)); // "GEIIS" the problematic private group, containing a *always* compressed Pixel Data
++#endif
+     if (newXfer == EXS_Unknown)
+         return OFFalse;
+ 
+Binary files dcmtk-3.7.0.original/dcmnet/.DS_Store and dcmtk-3.7.0/dcmnet/.DS_Store differ
+diff -rupN dcmtk-3.7.0.original/dcmnet/libsrc/dimse.cc dcmtk-3.7.0/dcmnet/libsrc/dimse.cc
+--- dcmtk-3.7.0.original/dcmnet/libsrc/dimse.cc	2025-12-15 08:28:13
++++ dcmtk-3.7.0/dcmnet/libsrc/dimse.cc	2025-12-30 06:33:40
+@@ -101,6 +101,10 @@
+ #include "dcmtk/dcmdata/dcvrui.h"      /* for class DcmUniqueIdentifier */
+ #include "dcmtk/ofstd/ofstd.h"
+ 
++#ifndef FOR_MIELE_LXIV
++#error lxiv not defined
++#endif
++
+ /*
+  * Global variables, mutex protected
+  */
+@@ -272,7 +276,10 @@ DIMSE_readNextPDV(
+  */
+ 
+ 
+-static OFCondition
++ #ifndef FOR_MIELE_LXIV
++ static
++ #endif
++OFCondition
+ getTransferSyntax(
+         T_ASC_Association *assoc,
+         T_ASC_PresentationContextID pid,
+Binary files dcmtk-3.7.0.original/dcmqrdb/.DS_Store and dcmtk-3.7.0/dcmqrdb/.DS_Store differ
+diff -rupN dcmtk-3.7.0.original/dcmqrdb/include/dcmtk/dcmqrdb/dcmqrcbg.h dcmtk-3.7.0/dcmqrdb/include/dcmtk/dcmqrdb/dcmqrcbg.h
+--- dcmtk-3.7.0.original/dcmqrdb/include/dcmtk/dcmqrdb/dcmqrcbg.h	2025-12-15 08:28:13
++++ dcmtk-3.7.0/dcmqrdb/include/dcmtk/dcmqrdb/dcmqrcbg.h	2025-12-30 06:36:28
+@@ -26,6 +26,10 @@
+ #include "dcmtk/dcmnet/dimse.h"
+ #include "dcmtk/dcmqrdb/qrdefine.h"
+ 
++#ifndef FOR_MIELE_LXIV
++#error lxiv not defined
++#endif
++
+ class DcmQueryRetrieveDatabaseHandle;
+ class DcmQueryRetrieveOptions;
+ class DcmQueryRetrieveDatabaseStatus;
+@@ -107,12 +111,30 @@ class DCMTK_DCMQRDB_EXPORT DcmQueryRetrieveGetContext 
+     DcmQueryRetrieveGetContext& operator=(const DcmQueryRetrieveGetContext& other);
+ 
+     void addFailedUIDInstance(const char *sopInstance);
++#ifdef FOR_MIELE_LXIV
++    friend class DcmQueryRetrieveGetOurContext;
++#endif
+     OFCondition performGetSubOp(DIC_UI sopClass, DIC_UI sopInstance, char *fname);
++
++#ifdef FOR_MIELE_LXIV
++public:
++    virtual
++#endif
+     void getNextImage(DcmQueryRetrieveDatabaseStatus * dbStatus);
++#ifdef FOR_MIELE_LXIV
++private:
++#endif
++
+     void buildFailedInstanceList(DcmDataset ** rspIds);
+ 
+     /// reference to database handle
++#ifdef FOR_MIELE_LXIV
++protected:
++#endif
+     DcmQueryRetrieveDatabaseHandle& dbHandle;
++#ifdef FOR_MIELE_LXIV
++private:
++#endif
+ 
+     /// reference to Q/R service options
+     const DcmQueryRetrieveOptions& options_;
+@@ -149,7 +171,13 @@ class DCMTK_DCMQRDB_EXPORT DcmQueryRetrieveGetContext 
+     char *failedUIDs;
+ 
+     /// number of remaining sub-operations
++#ifdef FOR_MIELE_LXIV
++protected:
++#endif
+     DIC_US nRemaining;
++#ifdef FOR_MIELE_LXIV
++private:
++#endif
+ 
+     /// number of completed sub-operations
+     DIC_US nCompleted;
+@@ -161,6 +189,9 @@ class DCMTK_DCMQRDB_EXPORT DcmQueryRetrieveGetContext 
+     DIC_US nWarning;
+ 
+     /// true if the get sub-operations have been cancelled
++#ifdef FOR_MIELE_LXIV
++protected:
++#endif
+     OFBool getCancelled;
+ 
+ };
+diff -rupN dcmtk-3.7.0.original/dcmqrdb/include/dcmtk/dcmqrdb/dcmqrsrv.h dcmtk-3.7.0/dcmqrdb/include/dcmtk/dcmqrdb/dcmqrsrv.h
+--- dcmtk-3.7.0.original/dcmqrdb/include/dcmtk/dcmqrdb/dcmqrsrv.h	2025-12-15 08:28:13
++++ dcmtk-3.7.0/dcmqrdb/include/dcmtk/dcmqrdb/dcmqrsrv.h	2025-12-30 06:37:41
+@@ -22,6 +22,10 @@
+ #ifndef DCMQRSRV_H
+ #define DCMQRSRV_H
+ 
++#ifndef FOR_MIELE_LXIV
++#error lxiv not defined
++#endif
++
+ #include "dcmtk/config/osconfig.h"    /* make sure OS specific configuration is included first */
+ #include "dcmtk/ofstd/oftypes.h"
+ #include "dcmtk/dcmnet/assoc.h"
+@@ -112,9 +116,15 @@ class DCMTK_DCMQRDB_EXPORT DcmQueryRetrieveSCP (privat
+ 
+   OFCondition refuseAssociation(T_ASC_Association ** pAssoc, CTN_RefuseReason reason);
+ 
++#ifdef FOR_MIELE_LXIV
++public:
++#endif
+   OFCondition handleAssociation(
+     T_ASC_Association ** assoc,
+     OFBool correctUIDPadding);
++#ifdef FOR_MIELE_LXIV
++private:
++#endif
+ 
+   OFCondition echoSCP(
+     T_ASC_Association * assoc,
+@@ -127,11 +137,18 @@ class DCMTK_DCMQRDB_EXPORT DcmQueryRetrieveSCP (privat
+     T_ASC_PresentationContextID presID,
+     DcmQueryRetrieveDatabaseHandle& dbHandle);
+ 
++#ifdef FOR_MIELE_LXIV
++public:
++    virtual
++#endif
+   OFCondition getSCP(
+     T_ASC_Association * assoc,
+     T_DIMSE_C_GetRQ * request,
+     T_ASC_PresentationContextID presID,
+     DcmQueryRetrieveDatabaseHandle& dbHandle);
++#ifdef FOR_MIELE_LXIV
++private:
++#endif
+ 
+   OFCondition moveSCP(
+     T_ASC_Association * assoc,
+@@ -139,12 +156,19 @@ class DCMTK_DCMQRDB_EXPORT DcmQueryRetrieveSCP (privat
+     T_ASC_PresentationContextID presID,
+     DcmQueryRetrieveDatabaseHandle& dbHandle);
+ 
++#ifdef FOR_MIELE_LXIV
++public:
++    virtual
++#endif
+   OFCondition storeSCP(
+     T_ASC_Association * assoc,
+     T_DIMSE_C_StoreRQ * req,
+     T_ASC_PresentationContextID presId,
+     DcmQueryRetrieveDatabaseHandle& dbHandle,
+     OFBool correctUIDPadding);
++#ifdef FOR_MIELE_LXIV
++private:
++#endif
+ 
+   OFCondition dispatch(
+     T_ASC_Association *assoc,
+@@ -168,7 +192,13 @@ class DCMTK_DCMQRDB_EXPORT DcmQueryRetrieveSCP (privat
+   const DcmQueryRetrieveDatabaseHandleFactory& factory_;
+ 
+   /// SCP configuration options
++#ifdef FOR_MIELE_LXIV
++public:
++#endif
+   const DcmQueryRetrieveOptions& options_;
++#ifdef FOR_MIELE_LXIV
++private:
++#endif
+ 
+   /// Association configuration profiles read from configuration file
+   const DcmAssociationConfiguration& associationConfiguration_;
+diff -rupN dcmtk-3.7.0.original/dcmqrdb/libsrc/dcmqrcbg.cc dcmtk-3.7.0/dcmqrdb/libsrc/dcmqrcbg.cc
+--- dcmtk-3.7.0.original/dcmqrdb/libsrc/dcmqrcbg.cc	2025-12-15 08:28:13
++++ dcmtk-3.7.0/dcmqrdb/libsrc/dcmqrcbg.cc	2026-01-15 07:22:26
+@@ -36,6 +36,10 @@ END_EXTERN_C
+ #include <fcntl.h>       /* needed on Solaris for O_RDONLY */
+ END_EXTERN_C
+ 
++#ifndef FOR_MIELE_LXIV
++#error lxiv not defined
++#endif
++
+ static void getSubOpProgressCallback(void * /* callbackData */,
+     T_DIMSE_StoreProgress *progress,
+     T_DIMSE_C_StoreRQ * /*req*/)
+@@ -94,7 +98,11 @@ void DcmQueryRetrieveGetContext::callbackHandler(
+     }
+ 
+     if (dbStatus.status() == STATUS_Pending) {
++#ifdef FOR_MIELE_LXIV
++        this->getNextImage(&dbStatus);
++#else
+         getNextImage(&dbStatus);
++#endif
+     }
+ 
+     if (dbStatus.status() != STATUS_Pending) {
+diff -rupN dcmtk-3.7.0.original/dcmqrdb/libsrc/dcmqrsrv.cc dcmtk-3.7.0/dcmqrdb/libsrc/dcmqrsrv.cc
+--- dcmtk-3.7.0.original/dcmqrdb/libsrc/dcmqrsrv.cc	2025-12-15 08:28:13
++++ dcmtk-3.7.0/dcmqrdb/libsrc/dcmqrsrv.cc	2026-01-15 07:32:06
+@@ -19,6 +19,10 @@
+  *
+  */
+ 
++#ifndef FOR_MIELE_LXIV
++#error lxiv not defined
++#endif
++
+ #include "dcmtk/config/osconfig.h"     /* make sure OS specific configuration is included first */
+ #include "dcmtk/dcmqrdb/dcmqrsrv.h"
+ #include "dcmtk/dcmqrdb/dcmqropt.h"
+@@ -32,6 +36,10 @@
+ #include "dcmtk/dcmqrdb/dcmqrcbs.h"    /* for class DcmQueryRetrieveStoreContext */
+ #include "dcmtk/dcmtls/tlsopt.h"       /* for DcmTLSOptions */
+ 
++#ifdef FOR_MIELE_LXIV
++#include "dcmtk/dcmnet/dimse.h"
++#endif
++
+ static void findCallback(
+   /* in */
+   void *callbackData,
+@@ -589,175 +597,250 @@ OFCondition DcmQueryRetrieveSCP::negotiateAssociation(
+     DIC_AE calledAETitle;
+     ASC_getAPTitles(assoc->params, NULL, 0, calledAETitle, sizeof(calledAETitle), NULL, 0);
+ 
++#ifdef FOR_MIELE_LXIV
++#define NUM_TS  12
++    const char* transferSyntaxes[NUM_TS];
++    for (int i=0; i<NUM_TS; i++)
++        transferSyntaxes[i] = NULL;
++#else
+     const char* transferSyntaxes[] = { NULL, NULL, NULL, NULL };
+-    int numTransferSyntaxes = 0;
++#endif
++    int nTS = 0;
+ 
+     switch (options_.networkTransferSyntax_)
+     {
+       case EXS_LittleEndianImplicit:
+         /* we only support Little Endian Implicit */
+-        transferSyntaxes[0]  = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 1;
++        transferSyntaxes[nTS++]  = UID_LittleEndianImplicitTransferSyntax;
+         break;
+       case EXS_LittleEndianExplicit:
+         /* we prefer Little Endian Explicit */
+-        transferSyntaxes[0] = UID_LittleEndianExplicitTransferSyntax;
+-        transferSyntaxes[1] = UID_BigEndianExplicitTransferSyntax;
+-        transferSyntaxes[2]  = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 3;
++        transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
++#ifdef FOR_MIELE_LXIV
++        transferSyntaxes[nTS++] = UID_JPEG2000LosslessOnlyTransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEG2000TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGLSLosslessTransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGLSLossyTransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGProcess14SV1TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGProcess1TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGProcess2_4TransferSyntax;
++        transferSyntaxes[nTS++] = UID_RLELosslessTransferSyntax;
++        transferSyntaxes[nTS++] = UID_MPEG2MainProfileAtMainLevelTransferSyntax;
++#endif
+         break;
+       case EXS_BigEndianExplicit:
+         /* we prefer Big Endian Explicit */
+-        transferSyntaxes[0] = UID_BigEndianExplicitTransferSyntax;
+-        transferSyntaxes[1] = UID_LittleEndianExplicitTransferSyntax;
+-        transferSyntaxes[2]  = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 3;
++        transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
++#ifdef FOR_MIELE_LXIV
++        transferSyntaxes[nTS++] = UID_JPEGProcess14SV1TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGProcess1TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGProcess2_4TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEG2000TransferSyntax;
++        transferSyntaxes[nTS++] = UID_RLELosslessTransferSyntax;
++#endif
+         break;
+ #ifndef DISABLE_COMPRESSION_EXTENSION
+       case EXS_JPEGProcess14SV1:
+         /* we prefer JPEGLossless:Hierarchical-1stOrderPrediction (default lossless) */
+-        transferSyntaxes[0] = UID_JPEGProcess14SV1TransferSyntax;
+-        transferSyntaxes[1] = UID_LittleEndianExplicitTransferSyntax;
+-        transferSyntaxes[2] = UID_BigEndianExplicitTransferSyntax;
+-        transferSyntaxes[3] = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 4;
++        transferSyntaxes[nTS++] = UID_JPEGProcess14SV1TransferSyntax;
++  #ifdef FOR_MIELE_LXIV
++        transferSyntaxes[nTS++] = UID_JPEGProcess1TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGProcess2_4TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEG2000LosslessOnlyTransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEG2000TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGLSLosslessTransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGLSLossyTransferSyntax;
++  #endif
++        transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
++  #ifdef FOR_MIELE_LXIV
++        transferSyntaxes[nTS++] = UID_RLELosslessTransferSyntax;
++        transferSyntaxes[nTS++] = UID_MPEG2MainProfileAtMainLevelTransferSyntax;
++  #endif
+         break;
+       case EXS_JPEGProcess1:
+         /* we prefer JPEGBaseline (default lossy for 8 bit images) */
+-        transferSyntaxes[0] = UID_JPEGProcess1TransferSyntax;
+-        transferSyntaxes[1] = UID_LittleEndianExplicitTransferSyntax;
+-        transferSyntaxes[2] = UID_BigEndianExplicitTransferSyntax;
+-        transferSyntaxes[3] = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 4;
++        transferSyntaxes[nTS++] = UID_JPEGProcess1TransferSyntax;
++  #ifdef FOR_MIELE_LXIV
++        transferSyntaxes[nTS++] = UID_JPEGProcess2_4TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGProcess14SV1TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEG2000LosslessOnlyTransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEG2000TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGLSLosslessTransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGLSLossyTransferSyntax;
++  #endif
++        transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
++  #ifdef FOR_MIELE_LXIV
++        transferSyntaxes[nTS++] = UID_RLELosslessTransferSyntax;
++        transferSyntaxes[nTS++] = UID_MPEG2MainProfileAtMainLevelTransferSyntax;
++  #endif
+         break;
+       case EXS_JPEGProcess2_4:
+         /* we prefer JPEGExtended (default lossy for 12 bit images) */
+-        transferSyntaxes[0] = UID_JPEGProcess2_4TransferSyntax;
+-        transferSyntaxes[1] = UID_LittleEndianExplicitTransferSyntax;
+-        transferSyntaxes[2] = UID_BigEndianExplicitTransferSyntax;
+-        transferSyntaxes[3] = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 4;
++        transferSyntaxes[nTS++] = UID_JPEGProcess2_4TransferSyntax;
++  #ifdef FOR_MIELE_LXIV
++        transferSyntaxes[nTS++] = UID_JPEGProcess14SV1TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGProcess1TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEG2000LosslessOnlyTransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEG2000TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGLSLosslessTransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGLSLossyTransferSyntax;
++  #endif
++        transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
++  #ifdef FOR_MIELE_LXIV
++        transferSyntaxes[nTS++] = UID_RLELosslessTransferSyntax;
++        transferSyntaxes[nTS++] = UID_MPEG2MainProfileAtMainLevelTransferSyntax;
++  #endif
+         break;
+       case EXS_JPEG2000LosslessOnly:
+         /* we prefer JPEG 2000 lossless */
+-        transferSyntaxes[0] = UID_JPEG2000LosslessOnlyTransferSyntax;
+-        transferSyntaxes[1] = UID_LittleEndianExplicitTransferSyntax;
+-        transferSyntaxes[2] = UID_BigEndianExplicitTransferSyntax;
+-        transferSyntaxes[3] = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 4;
++        transferSyntaxes[nTS++] = UID_JPEG2000LosslessOnlyTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
++  #ifdef FOR_MIELE_LXIV
++        transferSyntaxes[nTS++] = UID_JPEGLSLosslessTransferSyntax;
++  #endif
+         break;
+       case EXS_JPEG2000:
+         /* we prefer JPEG 2000 lossy or lossless */
+-        transferSyntaxes[0] = UID_JPEG2000TransferSyntax;
+-        transferSyntaxes[1] = UID_LittleEndianExplicitTransferSyntax;
+-        transferSyntaxes[2] = UID_BigEndianExplicitTransferSyntax;
+-        transferSyntaxes[3] = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 4;
++        transferSyntaxes[nTS++] = UID_JPEG2000TransferSyntax;
++  #ifdef FOR_MIELE_LXIV
++        transferSyntaxes[nTS++] = UID_JPEG2000LosslessOnlyTransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGLSLossyTransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGLSLosslessTransferSyntax;
++  #endif
++        transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
++  #ifdef FOR_MIELE_LXIV
++        transferSyntaxes[nTS++] = UID_JPEGProcess14SV1TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGProcess1TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGProcess2_4TransferSyntax;
++        transferSyntaxes[nTS++] = UID_RLELosslessTransferSyntax;
++        transferSyntaxes[nTS++] = UID_MPEG2MainProfileAtMainLevelTransferSyntax;
++  #endif
+         break;
+       case EXS_JPEGLSLossless:
+         /* we prefer JPEG-LS Lossless */
+-        transferSyntaxes[0] = UID_JPEGLSLosslessTransferSyntax;
+-        transferSyntaxes[1] = UID_LittleEndianExplicitTransferSyntax;
+-        transferSyntaxes[2] = UID_BigEndianExplicitTransferSyntax;
+-        transferSyntaxes[3] = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 4;
++        transferSyntaxes[nTS++] = UID_JPEGLSLosslessTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
++  #ifdef FOR_MIELE_LXIV
++        transferSyntaxes[nTS++] = UID_JPEG2000LosslessOnlyTransferSyntax;
++  #endif
+         break;
+       case EXS_JPEGLSLossy:
+         /* we prefer JPEG-LS Lossy */
+-        transferSyntaxes[0] = UID_JPEGLSLossyTransferSyntax;
+-        transferSyntaxes[1] = UID_LittleEndianExplicitTransferSyntax;
+-        transferSyntaxes[2] = UID_BigEndianExplicitTransferSyntax;
+-        transferSyntaxes[3] = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 4;
++        transferSyntaxes[nTS++] = UID_JPEGLSLossyTransferSyntax;
++  #ifdef FOR_MIELE_LXIV
++        transferSyntaxes[nTS++] = UID_JPEGLSLosslessTransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEG2000TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEG2000LosslessOnlyTransferSyntax;
++  #endif
++        transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
++  #ifdef FOR_MIELE_LXIV
++        transferSyntaxes[nTS++] = UID_JPEGProcess14SV1TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGProcess1TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGProcess2_4TransferSyntax;
++  #endif
+         break;
+       case EXS_MPEG2MainProfileAtMainLevel:
+         /* we prefer MPEG2 MP@ML */
+-        transferSyntaxes[0] = UID_MPEG2MainProfileAtMainLevelTransferSyntax;
+-        transferSyntaxes[1] = UID_LittleEndianExplicitTransferSyntax;
+-        transferSyntaxes[2] = UID_BigEndianExplicitTransferSyntax;
+-        transferSyntaxes[3] = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 4;
++        transferSyntaxes[nTS++] = UID_MPEG2MainProfileAtMainLevelTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
+         break;
+       case EXS_MPEG2MainProfileAtHighLevel:
+         /* we prefer MPEG2 MP@HL */
+-        transferSyntaxes[0] = UID_MPEG2MainProfileAtHighLevelTransferSyntax;
+-        transferSyntaxes[1] = UID_LittleEndianExplicitTransferSyntax;
+-        transferSyntaxes[2] = UID_BigEndianExplicitTransferSyntax;
+-        transferSyntaxes[3] = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 4;
++        transferSyntaxes[nTS++] = UID_MPEG2MainProfileAtHighLevelTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
+         break;
+       case EXS_MPEG4HighProfileLevel4_1:
+         /* we prefer MPEG4 HP/L4.1 */
+-        transferSyntaxes[0] = UID_MPEG4HighProfileLevel4_1TransferSyntax;
+-        transferSyntaxes[1] = UID_LittleEndianExplicitTransferSyntax;
+-        transferSyntaxes[2] = UID_BigEndianExplicitTransferSyntax;
+-        transferSyntaxes[3] = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 4;
++        transferSyntaxes[nTS++] = UID_MPEG4HighProfileLevel4_1TransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
+         break;
+       case EXS_MPEG4BDcompatibleHighProfileLevel4_1:
+         /* we prefer MPEG4 BD HP/L4.1 */
+-        transferSyntaxes[0] = UID_MPEG4BDcompatibleHighProfileLevel4_1TransferSyntax;
+-        transferSyntaxes[1] = UID_LittleEndianExplicitTransferSyntax;
+-        transferSyntaxes[2] = UID_BigEndianExplicitTransferSyntax;
+-        transferSyntaxes[3] = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 4;
++        transferSyntaxes[nTS++] = UID_MPEG4BDcompatibleHighProfileLevel4_1TransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
+         break;
+       case EXS_MPEG4HighProfileLevel4_2_For2DVideo:
+         /* we prefer MPEG4 HP/L4.2 for 2D Videos */
+-        transferSyntaxes[0] = UID_MPEG4HighProfileLevel4_2_For2DVideoTransferSyntax;
+-        transferSyntaxes[1] = UID_LittleEndianExplicitTransferSyntax;
+-        transferSyntaxes[2] = UID_BigEndianExplicitTransferSyntax;
+-        transferSyntaxes[3] = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 4;
++        transferSyntaxes[nTS++] = UID_MPEG4HighProfileLevel4_2_For2DVideoTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
+         break;
+       case EXS_MPEG4HighProfileLevel4_2_For3DVideo:
+         /* we prefer MPEG4 HP/L4.2 for 3D Videos */
+-        transferSyntaxes[0] = UID_MPEG4HighProfileLevel4_2_For3DVideoTransferSyntax;
+-        transferSyntaxes[1] = UID_LittleEndianExplicitTransferSyntax;
+-        transferSyntaxes[2] = UID_BigEndianExplicitTransferSyntax;
+-        transferSyntaxes[3] = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 4;
++        transferSyntaxes[nTS++] = UID_MPEG4HighProfileLevel4_2_For3DVideoTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
+         break;
+       case EXS_MPEG4StereoHighProfileLevel4_2:
+         /* we prefer MPEG4 Stereo HP/L4.2 */
+-        transferSyntaxes[0] = UID_MPEG4StereoHighProfileLevel4_2TransferSyntax;
+-        transferSyntaxes[1] = UID_LittleEndianExplicitTransferSyntax;
+-        transferSyntaxes[2] = UID_BigEndianExplicitTransferSyntax;
+-        transferSyntaxes[3] = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 4;
++        transferSyntaxes[nTS++] = UID_MPEG4StereoHighProfileLevel4_2TransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
+         break;
+       case EXS_HEVCMainProfileLevel5_1:
+         /* we prefer HEVC/H.265 Main Profile/L5.1 */
+-        transferSyntaxes[0] = UID_HEVCMainProfileLevel5_1TransferSyntax;
+-        transferSyntaxes[1] = UID_LittleEndianExplicitTransferSyntax;
+-        transferSyntaxes[2] = UID_BigEndianExplicitTransferSyntax;
+-        transferSyntaxes[3] = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 4;
++        transferSyntaxes[nTS++] = UID_HEVCMainProfileLevel5_1TransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
+         break;
+       case EXS_HEVCMain10ProfileLevel5_1:
+         /* we prefer HEVC/H.265 Main 10 Profile/L5.1 */
+-        transferSyntaxes[0] = UID_HEVCMain10ProfileLevel5_1TransferSyntax;
+-        transferSyntaxes[1] = UID_LittleEndianExplicitTransferSyntax;
+-        transferSyntaxes[2] = UID_BigEndianExplicitTransferSyntax;
+-        transferSyntaxes[3] = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 4;
++        transferSyntaxes[nTS++] = UID_HEVCMain10ProfileLevel5_1TransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
+         break;
+       case EXS_RLELossless:
+         /* we prefer RLE Lossless */
+-        transferSyntaxes[0] = UID_RLELosslessTransferSyntax;
+-        transferSyntaxes[1] = UID_LittleEndianExplicitTransferSyntax;
+-        transferSyntaxes[2] = UID_BigEndianExplicitTransferSyntax;
+-        transferSyntaxes[3] = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 4;
++        transferSyntaxes[nTS++] = UID_RLELosslessTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
++  #ifdef FOR_MIELE_LXIV
++        transferSyntaxes[nTS++] = UID_JPEG2000TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGProcess14SV1TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGProcess2_4TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGProcess1TransferSyntax;
++        transferSyntaxes[nTS++] = UID_MPEG2MainProfileAtMainLevelTransferSyntax;
++  #endif
+         break;
+ #ifdef WITH_ZLIB
+       case EXS_DeflatedLittleEndianExplicit:
+         /* we prefer deflated transmission */
+-        transferSyntaxes[0] = UID_DeflatedExplicitVRLittleEndianTransferSyntax;
+-        transferSyntaxes[1] = UID_LittleEndianExplicitTransferSyntax;
+-        transferSyntaxes[2] = UID_BigEndianExplicitTransferSyntax;
+-        transferSyntaxes[3] = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 4;
++        transferSyntaxes[nTS++] = UID_DeflatedExplicitVRLittleEndianTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
+         break;
+ #endif
+ #endif
+@@ -768,17 +851,31 @@ OFCondition DcmQueryRetrieveSCP::negotiateAssociation(
+          */
+         if (gLocalByteOrder == EBO_LittleEndian)  /* defined in dcxfer.h */
+         {
+-          transferSyntaxes[0] = UID_LittleEndianExplicitTransferSyntax;
+-          transferSyntaxes[1] = UID_BigEndianExplicitTransferSyntax;
++          transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
++          transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
+         } else {
+-          transferSyntaxes[0] = UID_BigEndianExplicitTransferSyntax;
+-          transferSyntaxes[1] = UID_LittleEndianExplicitTransferSyntax;
++          transferSyntaxes[nTS++] = UID_BigEndianExplicitTransferSyntax;
++          transferSyntaxes[nTS++] = UID_LittleEndianExplicitTransferSyntax;
+         }
+-        transferSyntaxes[2] = UID_LittleEndianImplicitTransferSyntax;
+-        numTransferSyntaxes = 3;
++        transferSyntaxes[nTS++] = UID_LittleEndianImplicitTransferSyntax;
++#ifdef FOR_MIELE_LXIV
++        transferSyntaxes[nTS++] = UID_JPEG2000LosslessOnlyTransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEG2000TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGLSLosslessTransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGLSLossyTransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGProcess14SV1TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGProcess1TransferSyntax;
++        transferSyntaxes[nTS++] = UID_JPEGProcess2_4TransferSyntax;
++        transferSyntaxes[nTS++] = UID_RLELosslessTransferSyntax;
++        transferSyntaxes[nTS++] = UID_MPEG2MainProfileAtMainLevelTransferSyntax;
++#endif
+         break;
+     }
+ 
++#ifdef FOR_MIELE_LXIV
++  assert(nTS <= NUM_TS);
++#endif
++
+     const char * const nonStorageSyntaxes[] =
+     {
+         UID_VerificationSOPClass,
+@@ -854,7 +951,7 @@ OFCondition DcmQueryRetrieveSCP::negotiateAssociation(
+         cond = ASC_acceptContextsWithPreferredTransferSyntaxes(
+           assoc->params,
+           dcmAllStorageSOPClassUIDs, numberOfDcmAllStorageSOPClassUIDs,
+-          (const char**)transferSyntaxes, numTransferSyntaxes);
++          (const char**)transferSyntaxes, nTS);
+         if (cond.bad()) {
+           DCMQRDB_ERROR("Cannot accept presentation contexts: " << DimseCondition::dump(temp_str, cond));
+         }
+@@ -880,7 +977,7 @@ OFCondition DcmQueryRetrieveSCP::negotiateAssociation(
+             ** syntax.  Accepting a transfer syntax will override previously
+             ** accepted transfer syntaxes.
+             */
+-            for (int k = numTransferSyntaxes - 1; k >= 0; k--)
++            for (int k = nTS - 1; k >= 0; k--)
+             {
+               for (int j = 0; j < (int)pc.transferSyntaxCount; j++)
+               {
+@@ -909,7 +1006,7 @@ OFCondition DcmQueryRetrieveSCP::negotiateAssociation(
+     cond = ASC_acceptContextsWithPreferredTransferSyntaxes(
+     assoc->params,
+     (const char**)selectedNonStorageSyntaxes, numberOfSelectedNonStorageSyntaxes,
+-    (const char**)transferSyntaxes, numTransferSyntaxes);
++    (const char**)transferSyntaxes, nTS);
+     if (cond.bad()) {
+         DCMQRDB_ERROR("Cannot accept presentation contexts: " << DimseCondition::dump(temp_str, cond));
+     }
+@@ -924,6 +1021,7 @@ OFCondition DcmQueryRetrieveSCP::negotiateAssociation(
+       return ASC_SHUTDOWNAPPLICATION;
+     }
+ 
++#ifndef FOR_MIELE_LXIV   // Commented out 27 Apr 2015
+     /*
+      * Refuse any "Storage" presentation contexts to non-writable
+      * storage areas.
+@@ -973,6 +1071,7 @@ OFCondition DcmQueryRetrieveSCP::negotiateAssociation(
+           }
+         }
+     }
++#endif
+ 
+     return cond;
+ }
+@@ -1053,6 +1152,7 @@ OFCondition DcmQueryRetrieveSCP::waitForAssociation(T_
+         }
+     }
+ 
++#ifndef FOR_MIELE_LXIV // commented out 27 Apr 2015
+     if (! go_cleanup)
+     {
+         /* Does peer AE have access to required service ?? */
+@@ -1078,6 +1178,7 @@ OFCondition DcmQueryRetrieveSCP::waitForAssociation(T_
+             go_cleanup = OFTrue;
+         }
+     }
++#endif
+ 
+     if (! go_cleanup)
+     {
